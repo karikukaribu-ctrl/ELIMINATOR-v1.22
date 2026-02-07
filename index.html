@@ -1,0 +1,2377 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>ELIMINATOR — Unified</title>
+  <style>
+    :root{
+      --bg:#f4f6fb; --fg:#0d1321; --muted:rgba(13,19,33,.62);
+      --glass:rgba(255,255,255,.58); --glass2:rgba(255,255,255,.34);
+      --lineA:rgba(13,19,33,.14); --shadow:0 18px 60px rgba(0,0,0,.10); --blur:18px;
+      --accent:rgba(0,140,255,.16); --accent2:rgba(0,140,255,.32);
+      --barAccent:var(--accent); --barAccent2:var(--accent2);
+
+      --radius:6px; --radius2:4px; --barH:38px; --chipH:18px;
+      --appW:min(1320px, 96vw); --vpad:clamp(10px,2.2vh,18px); --hpad:clamp(10px,2.2vw,18px);
+      --font:ui-sans-serif,system-ui,-apple-system,"SF Pro Display","Segoe UI",Roboto,Helvetica,Arial;
+      --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+      --uiScale:1.0; --titleScale:1.18; --taskScale:1.50;
+      --line:var(--lineA); --btnFill:0;
+      --drawerW:460px; --rightW:520px;
+    }
+    [data-theme="dark"]{
+      --bg:#0b0f17; --fg:#eaf0ff; --muted:rgba(234,240,255,.62);
+      --glass:rgba(18,24,38,.60); --glass2:rgba(18,24,38,.36);
+      --lineA:rgba(234,240,255,.14); --shadow:0 18px 80px rgba(0,0,0,.36); --blur:20px;
+      --accent:rgba(0,255,140,.14); --accent2:rgba(0,255,140,.28);
+      --barAccent:var(--accent); --barAccent2:var(--accent2);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0; font-family:var(--font); color:var(--fg); overflow-x:hidden;
+      background:
+        radial-gradient(1200px 700px at 25% 15%, rgba(255,255,255,.45), transparent 60%),
+        radial-gradient(1000px 680px at 80% 30%, rgba(0,0,0,.06), transparent 60%),
+        var(--bg);
+    }
+    [data-theme="dark"] body{
+      background:
+        radial-gradient(1200px 700px at 25% 15%, rgba(0,255,140,.055), transparent 60%),
+        radial-gradient(1100px 720px at 80% 30%, rgba(0,140,255,.045), transparent 60%),
+        var(--bg);
+    }
+    [data-borders="off"]{ --line: rgba(0,0,0,0); }
+    [data-buttons="filled"]{ --btnFill: 1; }
+
+    .wrap{ min-height:100%; display:flex; flex-direction:column; gap:clamp(10px,1.6vh,14px);
+      padding:var(--vpad) var(--hpad) calc(var(--vpad) + 10px); align-items:center; }
+
+    .topbar{
+      width:var(--appW); display:flex; justify-content:space-between; align-items:center; gap:10px;
+      padding:10px 10px; border:1px solid var(--line); border-radius:var(--radius);
+      background:var(--glass); backdrop-filter:blur(var(--blur)); box-shadow:var(--shadow);
+      position:sticky; top:8px; z-index:70;
+    }
+    .topbar .left,.topbar .right{display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0;}
+    .topbar .right{justify-content:flex-end;}
+
+    .btn{
+      border:1px solid var(--line); background:transparent; color:var(--fg);
+      border-radius:var(--radius2);
+      padding:calc(8px * var(--uiScale)) calc(10px * var(--uiScale));
+      font-size:calc(12px * var(--uiScale));
+      letter-spacing:.08em; text-transform:uppercase;
+      cursor:pointer; user-select:none; white-space:nowrap;
+      transition:transform 140ms ease, background 120ms ease, opacity 120ms ease;
+    }
+    .btn:hover{background:rgba(0,0,0,.04)}
+    [data-theme="dark"] .btn:hover{background:rgba(255,255,255,.05)}
+    .btn:active{transform:translateY(1px)}
+    .btn.icon{
+      width:calc(40px * var(--uiScale)); height:calc(36px * var(--uiScale));
+      display:grid; place-items:center; padding:0; font-family:var(--mono);
+      letter-spacing:0; text-transform:none; font-size:calc(15px * var(--uiScale));
+    }
+    .btn.primary{
+      background:linear-gradient(180deg, rgba(255,255,255, calc(.30 * var(--btnFill))), rgba(0,0,0,0));
+      box-shadow: inset 0 0 0 1px var(--line);
+    }
+    [data-theme="dark"] .btn.primary{
+      background:linear-gradient(180deg, rgba(255,255,255, calc(.12 * var(--btnFill))), rgba(0,0,0,0));
+    }
+
+    .pill{
+      padding:calc(6px * var(--uiScale)) calc(10px * var(--uiScale));
+      border-radius:999px; border:1px solid var(--line);
+      background:rgba(0,0,0,.03);
+      color:var(--muted); font-size:calc(12px * var(--uiScale));
+      font-family:var(--mono); white-space:nowrap; user-select:none;
+    }
+    [data-theme="dark"] .pill{background:rgba(255,255,255,.04)}
+    .pill.hidden{display:none}
+
+    .hero{ width:var(--appW); display:flex; flex-direction:column; align-items:center; gap:8px; padding:2px 8px 0; }
+    .title{
+      font-size:calc(clamp(54px, 5.8vw, 92px) * var(--titleScale));
+      letter-spacing:.22em; text-transform:uppercase;
+      margin:6px 0 0; font-weight:820; line-height:1.02; text-align:center;
+    }
+    .tag{ font-size:13px; color:var(--muted); text-align:center; max-width:78ch; padding:0 8px; min-height:18px; }
+
+    .main{
+      width:var(--appW);
+      display:flex; flex-direction:column; gap:clamp(12px,2.2vh,18px);
+      align-items:center; flex:1; justify-content:center;
+    }
+
+    .barWrap{
+      width:100%; display:flex; flex-direction:column; gap:10px;
+      padding:18px 16px 18px; border:1px solid var(--line); border-radius:var(--radius);
+      background:var(--glass); backdrop-filter:blur(var(--blur)); box-shadow:var(--shadow);
+    }
+    .barRow{ display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; }
+    .barLabel{ font-size:12px; letter-spacing:.08em; text-transform:uppercase; color:var(--muted); font-family:var(--mono); }
+    .bar{ width:100%; height:var(--barH); border:1px solid var(--line); background:rgba(0,0,0,.03);
+      border-radius:var(--radius2); position:relative; overflow:hidden; }
+    [data-theme="dark"] .bar{background:rgba(255,255,255,.04)}
+    .barFill{ position:absolute; inset:0; width:100%;
+      background:
+        radial-gradient(800px 140px at 20% 50%, var(--barAccent2), transparent 55%),
+        linear-gradient(90deg, var(--barAccent), transparent 70%);
+      transition:width 260ms ease;
+    }
+    .barPct{ position:absolute; inset:0; display:grid; place-items:center; font-family:var(--mono);
+      font-size:12px; color:var(--fg); opacity:.92; pointer-events:none; }
+
+    .current{
+      width:100%;
+      padding:16px 16px 14px; border:1px solid var(--line); border-radius:var(--radius);
+      background:var(--glass); backdrop-filter:blur(var(--blur)); box-shadow:var(--shadow);
+      display:flex; flex-direction:column; gap:14px;
+    }
+    .taskName{
+      font-size:calc(clamp(38px, 4.8vw, 76px) * var(--taskScale));
+      font-weight:860; letter-spacing:.01em; text-align:center; line-height:1.06;
+      padding:4px 6px; word-break:break-word;
+    }
+
+    .chips{ display:flex; flex-wrap:wrap; gap:6px; justify-content:center; padding:0; }
+    .chip{ width:var(--chipH); height:var(--chipH); border-radius:2px; border:1px solid var(--line); background:rgba(0,0,0,.03); }
+    [data-theme="dark"] .chip{background:rgba(255,255,255,.04)}
+    .chip.on{ background:var(--barAccent2); }
+
+    .actions{ display:flex; gap:12px; justify-content:center; flex-wrap:wrap; align-items:center; }
+    .roulette{
+      width:clamp(110px, 14vw, 170px); height:clamp(110px, 14vw, 170px);
+      border-radius:999px; border:1px solid var(--line);
+      background:
+        radial-gradient(circle at 30% 30%, var(--glass2), transparent 60%),
+        linear-gradient(180deg, var(--glass2), transparent);
+      backdrop-filter:blur(var(--blur)); box-shadow:var(--shadow);
+      display:grid; place-items:center; cursor:pointer; user-select:none;
+      transition:transform 140ms ease; position:relative; overflow:hidden;
+    }
+    .roulette:active{transform:translateY(1px) scale(.99)}
+    .rouletteText{ font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--fg);
+      opacity:.92; font-weight:820; font-family:var(--mono); }
+    .rouletteRing{ position:absolute; inset:10px; border-radius:999px; border:1px dashed var(--line); opacity:.85; }
+    .rouletteNeedle{
+      position:absolute; top:10px; left:50%; width:0; height:0;
+      border-left:8px solid transparent; border-right:8px solid transparent;
+      border-bottom:14px solid rgba(0,0,0,.18); transform:translateX(-50%); opacity:.9;
+    }
+    [data-theme="dark"] .rouletteNeedle{ border-bottom-color: rgba(255,255,255,.18); }
+    .rouletteSpin{ animation:spin 860ms cubic-bezier(.08,.92,.20,1) 1; }
+    @keyframes spin{ 0%{transform:rotate(0deg)} 100%{transform:rotate(1080deg)} }
+
+    .bomb{
+      min-width:clamp(180px, 26vw, 300px); padding:14px 16px;
+      border-radius:var(--radius2); border:1px solid var(--line);
+      background:linear-gradient(180deg, var(--glass2), transparent);
+      cursor:pointer; text-transform:uppercase; letter-spacing:.10em; font-size:12px;
+      display:flex; align-items:center; justify-content:center; gap:12px;
+      user-select:none; box-shadow:var(--shadow); transition:transform 140ms ease;
+    }
+    .bomb:hover{background:rgba(0,0,0,.03)}
+    [data-theme="dark"] .bomb:hover{background:rgba(255,255,255,.04)}
+    .bomb:active{transform:translateY(1px) scale(.99)}
+    .bomb .em{ font-family:var(--mono); font-size:16px; opacity:.92; }
+    .bomb .label{ display:flex; flex-direction:column; line-height:1.10; align-items:center; }
+    .bomb .label span{ font-size:12px; font-family:var(--mono); }
+    .bomb .label small{
+      font-size:10px; color:var(--muted); letter-spacing:.14em; text-transform:uppercase; font-family:var(--mono);
+    }
+
+    .miniRow{ display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap; }
+    .miniIcon{
+      width:56px; height:56px; border-radius:var(--radius2); border:1px solid var(--line);
+      display:grid; place-items:center; cursor:pointer; background:transparent; box-shadow:var(--shadow);
+      font-family:var(--mono); font-size:15px; user-select:none;
+      transition:transform 140ms ease, background 120ms ease; letter-spacing:.06em;
+    }
+    .miniIcon:hover{background:rgba(0,0,0,.03)}
+    [data-theme="dark"] .miniIcon:hover{background:rgba(255,255,255,.04)}
+    .miniIcon:active{transform:translateY(1px) scale(.99)}
+    .miniLabel{ width:auto; padding:0 12px; font-size:12px; text-transform:uppercase; }
+
+    .belowList{
+      width:100%; border:1px solid var(--line); border-radius:var(--radius);
+      background:var(--glass); backdrop-filter:blur(var(--blur)); box-shadow:var(--shadow);
+      padding:10px; display:none;
+    }
+    .belowList.show{display:block}
+    .belowHead{ display:flex; justify-content:space-between; align-items:center; gap:10px;
+      padding-bottom:8px; border-bottom:1px solid var(--line); margin-bottom:8px; }
+    .belowHead .h{ font-size:12px; letter-spacing:.10em; text-transform:uppercase; color:var(--muted); font-family:var(--mono); }
+    .taskRow{ display:flex; align-items:center; justify-content:space-between; gap:10px; padding:8px 6px; border-bottom:1px solid var(--line); }
+    .taskRow:last-child{border-bottom:none}
+    .taskRow .t{ flex:1; min-width:0; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; color:var(--fg); }
+    .taskRow .meta{ font-size:11px; color:var(--muted); font-family:var(--mono); white-space:nowrap; }
+    .taskRow .tools{ display:flex; gap:6px; align-items:center; }
+    .toolBtn{
+      width:36px; height:32px; border-radius:var(--radius2); border:1px solid var(--line);
+      display:grid; place-items:center; cursor:pointer; background:transparent;
+      font-family:var(--mono); font-size:12px; user-select:none;
+    }
+    .toolBtn:hover{background:rgba(0,0,0,.03)}
+    [data-theme="dark"] .toolBtn:hover{background:rgba(255,255,255,.04)}
+    .small{ font-size:12px; color:var(--muted); font-family:var(--mono); }
+
+    .focusOn .topbar .btn:not(.keepFocus), .focusOn .topbar .right{ display:none !important; }
+    .focusOn .topbar{ justify-content:center; }
+    .focusOn .topbar .left{ width:100%; justify-content:center; }
+
+    /* Drawer */
+    .drawerBack{ position:fixed; inset:0; background:rgba(0,0,0,.22); backdrop-filter:blur(10px); display:none; z-index:80; }
+    .drawer{
+      position:fixed; top:0; left:0; width:min(var(--drawerW), 94vw); height:100%;
+      background:var(--glass); border-right:1px solid var(--line); backdrop-filter:blur(var(--blur));
+      box-shadow:var(--shadow); transform:translateX(-105%); transition:transform 220ms ease;
+      z-index:90; display:flex; flex-direction:column;
+    }
+    .drawer.open{transform:translateX(0)}
+    .drawerBack.show{display:block}
+    .drawerTop{ display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid var(--line); gap:10px; }
+    .drawerTitle{ font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-family:var(--mono); }
+    .drawerResizer{ position:absolute; top:0; right:-6px; width:12px; height:100%; cursor:ew-resize; opacity:0; }
+    .drawer:hover .drawerResizer{opacity:1}
+    .tabs{ display:flex; gap:8px; padding:10px 12px 6px; flex-wrap:wrap; }
+    .tab{
+      padding:7px 9px; border-radius:var(--radius2); border:1px solid var(--line);
+      cursor:pointer; font-size:11px; letter-spacing:.12em; text-transform:uppercase;
+      color:var(--muted); user-select:none; font-family:var(--mono);
+    }
+    .tab.active{ color:var(--fg); background:linear-gradient(180deg, var(--glass2), transparent); box-shadow: inset 0 0 0 1px var(--line); }
+    .drawerBody{ padding:10px 12px 18px; overflow:auto; }
+
+    /* Right panel */
+    .rightBack{ position:fixed; inset:0; background:rgba(0,0,0,.12); backdrop-filter:blur(10px); display:none; z-index:75; }
+    .rightPanel{
+      position:fixed; top:0; right:0; width:min(var(--rightW), 94vw); height:100%;
+      background:var(--glass); border-left:1px solid var(--line); backdrop-filter:blur(var(--blur));
+      box-shadow:var(--shadow); transform:translateX(105%); transition:transform 220ms ease;
+      z-index:85; display:flex; flex-direction:column;
+    }
+    .rightPanel.open{transform:translateX(0)}
+    .rightBack.show{display:block}
+    .rightTop{ display:flex; justify-content:space-between; align-items:center; padding:10px 12px; border-bottom:1px solid var(--line); gap:10px; }
+    .rightTitle{ font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-family:var(--mono); }
+    .rightResizer{ position:absolute; top:0; left:-6px; width:12px; height:100%; cursor:ew-resize; opacity:0; }
+    .rightPanel:hover .rightResizer{opacity:1}
+    .rightTabs{ display:flex; gap:8px; padding:10px 12px 6px; flex-wrap:wrap; justify-content:flex-start; }
+    .rightBody{ padding:10px 12px 18px; overflow:auto; }
+
+    .section{ border:1px solid var(--line); border-radius:var(--radius); padding:10px; background:rgba(0,0,0,.02); }
+    [data-theme="dark"] .section{ background:rgba(255,255,255,.03); }
+    .section h3{ margin:0 0 8px; font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-family:var(--mono); font-weight:820; }
+
+    textarea, input, select{
+      width:100%; border:1px solid var(--line); background:transparent; color:var(--fg);
+      border-radius:var(--radius2); padding:10px; outline:none; font-family:var(--font); font-size:13px;
+    }
+    textarea{ min-height:120px; resize:vertical; }
+    .row{ display:flex; gap:8px; flex-wrap:wrap; align-items:center; }
+    .row > *{ flex:1; min-width:120px; }
+
+    /* Modals */
+    .modalBack{ position:fixed; inset:0; background:rgba(0,0,0,.25); backdrop-filter:blur(14px); display:none; z-index:110; }
+    .modal{ position:fixed; inset:0; display:none; z-index:120; padding:18px; align-items:center; justify-content:center; }
+    .modalCard{
+      width:min(980px,96vw); border:1px solid var(--line); border-radius:var(--radius);
+      background:var(--glass); backdrop-filter:blur(var(--blur)); box-shadow:var(--shadow);
+      padding:12px; max-height:86vh; overflow:auto;
+    }
+    .modalHead{ display:flex; justify-content:space-between; align-items:center; gap:10px; padding:6px 6px 10px;
+      border-bottom:1px solid var(--line); margin-bottom:10px; }
+    .modalHead .mh{ font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--muted); font-family:var(--mono); }
+
+    /* Celebration */
+    .celeCard{ width:min(1040px,97vw); min-height:min(74vh,780px); display:flex; flex-direction:column; justify-content:center; padding:22px 16px; position:relative; overflow:hidden;}
+    .celeHalo{ position:absolute; inset:-40%; background:
+        radial-gradient(circle at 30% 30%, var(--barAccent2), transparent 55%),
+        radial-gradient(circle at 70% 40%, var(--barAccent), transparent 55%),
+        radial-gradient(circle at 50% 70%, rgba(255,255,255,.10), transparent 55%);
+      opacity:.58; filter:blur(2px); transform:rotate(8deg); pointer-events:none;
+      animation:halo 2.2s ease-in-out infinite alternate;
+    }
+    @keyframes halo{ 0%{transform:rotate(6deg) scale(1.02); opacity:.50;} 100%{transform:rotate(10deg) scale(1.08); opacity:.72;} }
+    .celeTitle{ font-size:clamp(30px,4.6vw,62px); font-weight:900; letter-spacing:.16em; text-transform:uppercase; text-align:center; margin:10px 0 10px;}
+    .celeMsg{ font-size:clamp(14px,1.9vw,24px); text-align:center; line-height:1.55; margin:0 auto 12px; max-width:78ch; opacity:.95;}
+    .celeSub{ font-size:12px; color:var(--muted); text-align:center; margin:0; font-family:var(--mono); letter-spacing:.06em;}
+    .celeHint{ margin-top:14px; text-align:center; color:var(--muted); font-size:11px; letter-spacing:.10em; text-transform:uppercase; font-family:var(--mono); }
+
+    /* Confetti */
+    #confetti{ position:fixed; inset:0; pointer-events:none; z-index:140; }
+
+    @media (max-width:560px){
+      .btn{font-size:11px; padding:8px 9px}
+      .btn.icon{width:38px; height:34px}
+      .pill{font-size:11px}
+      .bomb{min-width:170px}
+      .miniIcon{width:52px; height:52px}
+    }
+  </style>
+</head>
+
+<body data-theme="light" data-borders="on" data-buttons="ghost">
+  <canvas id="confetti"></canvas>
+
+  <!-- LEFT DRAWER -->
+  <div class="drawerBack" id="drawerBack"></div>
+  <div class="drawer" id="drawer">
+    <div class="drawerResizer" id="drawerResizer" title="Agrandir/réduire"></div>
+    <div class="drawerTop">
+      <div class="drawerTitle">MENU</div>
+      <button class="btn" id="drawerClose">FERMER</button>
+    </div>
+    <div class="tabs" id="tabs"></div>
+    <div class="drawerBody" id="drawerBody"></div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="rightBack" id="rightBack"></div>
+  <div class="rightPanel" id="rightPanel">
+    <div class="rightResizer" id="rightResizer" title="Agrandir/réduire"></div>
+    <div class="rightTop">
+      <div class="rightTitle">PANNEAU DROIT</div>
+      <button class="btn" id="rightClose">FERMER</button>
+    </div>
+    <div class="rightTabs" id="rightTabs"></div>
+    <div class="rightBody" id="rightBody"></div>
+  </div>
+
+  <!-- MODAL BACKDROP -->
+  <div class="modalBack" id="modalBack"></div>
+
+  <!-- NOTES MODAL -->
+  <div class="modal" id="notesModal">
+    <div class="modalCard">
+      <div class="modalHead">
+        <div class="mh">NOTES</div>
+        <div class="small">Clique n’importe où pour fermer</div>
+      </div>
+      <div class="section">
+        <h3>Ajouter une note</h3>
+        <textarea id="noteInput" placeholder="Écris ici. Sortie de RAM."></textarea>
+        <div class="row" style="margin-top:8px">
+          <button class="btn primary" id="noteAdd">AJOUTER</button>
+          <button class="btn" id="noteClear">VIDER</button>
+        </div>
+      </div>
+      <div style="height:10px"></div>
+      <div class="section">
+        <h3>Historique</h3>
+        <div id="notesList" class="small"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CELEBRATION MODAL -->
+  <div class="modal" id="celeModal">
+    <div class="modalCard celeCard">
+      <div class="celeHalo" aria-hidden="true"></div>
+      <div class="celeTitle" id="celeTitle"></div>
+      <div class="celeMsg" id="celeMsg"></div>
+      <div class="celeSub" id="celeSub"></div>
+      <div class="celeHint">Clique n’importe où pour fermer</div>
+    </div>
+  </div>
+
+  <!-- TIPS MODAL -->
+  <div class="modal" id="tipsModal">
+    <div class="modalCard">
+      <div class="modalHead">
+        <div class="mh">CONSEIL</div>
+        <div class="small">Clique n’importe où pour fermer</div>
+      </div>
+      <div class="celeTitle" style="font-size:clamp(18px,2.4vw,28px); letter-spacing:.08em" id="tipsTitle"></div>
+      <div class="celeMsg" style="font-size:clamp(13px,1.6vw,18px)" id="tipsMsg"></div>
+      <div class="celeSub" id="tipsSub"></div>
+    </div>
+  </div>
+
+  <!-- NUDGE MODAL -->
+  <div class="modal" id="emoNudgeModal">
+    <div class="modalCard">
+      <div class="modalHead">
+        <div class="mh">MICRO-RÉGULATION</div>
+        <div class="small">Clique n’importe où pour fermer</div>
+      </div>
+      <div class="celeTitle" style="font-size:clamp(18px,2.4vw,28px); letter-spacing:.10em" id="emoNudgeTitle"></div>
+      <div class="celeMsg" style="font-size:clamp(13px,1.6vw,18px)" id="emoNudgeMsg"></div>
+      <div class="celeSub" id="emoNudgeSub"></div>
+    </div>
+  </div>
+
+  <!-- EDITOR MODAL (task / set / emotion) -->
+  <div class="modal" id="setEditModal">
+    <div class="modalCard">
+      <div class="modalHead">
+        <div class="mh">ÉDITION</div>
+        <div class="small">Clique n’importe où pour fermer</div>
+      </div>
+      <div id="setEditBody"></div>
+    </div>
+  </div>
+
+  <!-- EXPORT MODAL -->
+  <div class="modal" id="exportModal">
+    <div class="modalCard">
+      <div class="modalHead">
+        <div class="mh">EXPORT</div>
+        <div class="small">Clique n’importe où pour fermer</div>
+      </div>
+      <div class="section">
+        <h3>Texte / JSON / CSV</h3>
+        <div class="row" style="margin-bottom:8px">
+          <button class="btn primary" id="expText">TEXTE</button>
+          <button class="btn" id="expJSON">JSON</button>
+          <button class="btn" id="expCSV">CSV</button>
+          <button class="btn" id="expCopy">COPIER</button>
+        </div>
+        <textarea id="expOut" style="min-height:260px"></textarea>
+        <div class="small" style="margin-top:8px">Les notes ne sont pas intégrées au rapport texte.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap" id="app">
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <div class="left">
+        <button class="btn icon keepFocus" id="btnMenu" title="Menu gauche">≡</button>
+
+        <button class="btn keepFocus" id="btnTheme" title="Thème"><span id="themeLabel">THÈME CLAIR</span></button>
+
+        <button class="btn keepFocus" id="btnCounters" title="Afficher/masquer compteurs">COMPTEURS</button>
+        <span class="pill hidden" id="pillTasks">0/0 tâches</span>
+        <span class="pill hidden" id="pillEto">0/0 étorions</span>
+        <span class="pill hidden" id="pillDone">0 faites</span>
+        <span class="pill hidden" id="pillTimer">00:00</span>
+
+        <button class="btn keepFocus" id="btnListToggle" title="Afficher/masquer la liste sur l'écran">LISTE</button>
+        <button class="btn keepFocus" id="btnFocus" title="Mode focus (flow)">FOCUS</button>
+      </div>
+
+      <div class="right">
+        <button class="btn icon keepFocus" id="btnRight" title="Panneau droit">▦</button>
+      </div>
+    </div>
+
+    <!-- HERO -->
+    <div class="hero">
+      <div class="title" id="appTitle">ELIMINATOR</div>
+      <div class="tag" id="tagline"></div>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+      <!-- PROGRESS -->
+      <div class="barWrap">
+        <div class="barRow">
+          <div class="barLabel">progression tâches</div>
+          <div class="barLabel" id="barInfo">—</div>
+        </div>
+        <div class="bar" title="La barre commence à 100% et diminue">
+          <div class="barFill" id="taskBarFill" style="width:100%"></div>
+          <div class="barPct" id="taskBarPct">100%</div>
+        </div>
+      </div>
+
+      <!-- CURRENT TASK -->
+      <div class="current">
+        <div class="taskName" id="taskName">Aucune tâche</div>
+        <div class="chips" id="chips"></div>
+
+        <div class="actions">
+          <div class="roulette" id="btnRoulette" title="Roulette">
+            <div class="rouletteRing" aria-hidden="true"></div>
+            <div class="rouletteNeedle" aria-hidden="true"></div>
+            <div class="rouletteText">ROULETTE</div>
+          </div>
+
+          <div class="bomb" id="btnEtorion" title="Dégommer un étorion">
+            <div class="em">💣</div>
+            <div class="label">
+              <span>DÉGOMMER</span>
+              <small>1 ÉTORION</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="miniRow">
+          <div class="miniIcon" id="btnUndo" title="Annuler (undo)">↶</div>
+          <div class="miniIcon miniLabel" id="btnNotes" title="Notes">NOTES</div>
+          <div class="miniIcon" id="btnDoneTask" title="Tâche dégommée">✓</div>
+          <div class="miniIcon" id="btnEditTask" title="Éditer">≋</div>
+          <div class="miniIcon" id="btnPause" title="Pause compteur / Pomodoro">⏸</div>
+        </div>
+
+        <div class="belowList" id="belowList">
+          <div class="belowHead">
+            <div class="h">LISTE EN COURS</div>
+            <button class="btn" id="btnHideBelow">MASQUER</button>
+          </div>
+          <div id="belowTasks"></div>
+        </div>
+
+        <div class="small" id="hintLine" style="text-align:center">
+          Une cible. Une action. Zéro tribunal intérieur.
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* =========================
+   ELIMINATOR — Unified & functional
+   ========================= */
+
+const $ = (id)=>document.getElementById(id);
+const clamp = (n,a,b)=>Math.max(a, Math.min(b,n));
+const uid = ()=>Math.random().toString(36).slice(2,10)+"_"+Date.now().toString(36);
+const nowISO = ()=>new Date().toISOString();
+const clone = (x)=> (window.structuredClone ? structuredClone(x) : JSON.parse(JSON.stringify(x)));
+
+function dayKey(d=new Date()){
+  const y=d.getFullYear();
+  const m=String(d.getMonth()+1).padStart(2,"0");
+  const da=String(d.getDate()).padStart(2,"0");
+  return `${y}-${m}-${da}`;
+}
+function fmtMMSS(ms){
+  const s = Math.floor(ms/1000);
+  const mm = String(Math.floor(s/60)).padStart(2,"0");
+  const ss = String(s%60).padStart(2,"0");
+  return `${mm}:${ss}`;
+}
+function plural(n, one, many){ return (n===1)? one : many; }
+function rand(n){ return Math.floor(Math.random()*n); }
+function escapeHTML(s){
+  return (s||"").replace(/[&<>"']/g, c=>({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;" }[c]));
+}
+function clearEl(el){ while(el.firstChild) el.removeChild(el.firstChild); }
+
+const ACCENTS = {
+  cyan:   { a:"rgba(0,140,255,.16)", a2:"rgba(0,140,255,.32)" },
+  violet: { a:"rgba(140,80,255,.16)", a2:"rgba(140,80,255,.32)" },
+  lime:   { a:"rgba(0,255,140,.14)", a2:"rgba(0,255,140,.30)" },
+  amber:  { a:"rgba(255,180,0,.14)", a2:"rgba(255,180,0,.28)" },
+  steel:  { a:"rgba(180,200,255,.12)", a2:"rgba(180,200,255,.24)" },
+  rose:   { a:"rgba(255,120,180,.12)", a2:"rgba(255,120,180,.24)" },
+  ice:    { a:"rgba(120,220,255,.12)", a2:"rgba(120,220,255,.24)" }
+};
+const FONT_FAMILIES = {
+  system: 'ui-sans-serif, system-ui, -apple-system, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial',
+  elegant: '"SF Pro Display", -apple-system, system-ui, "Segoe UI", Roboto, Helvetica, Arial',
+  neutral: 'system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial',
+  serif: 'ui-serif, "New York", "Iowan Old Style", Georgia, serif'
+};
+
+const TAGLINE_POOL = [
+  "Quête principale: active. Quêtes secondaires: muselées.",
+  "Le chaos a une armée. Toi, tu as une tactique clinique.",
+  "Un étorion. Une incision nette. Hémostase du bazar.",
+  "Mode ninja: silencieux. Précis. Irréprochable.",
+  "Tu poses des balises dans le temps. Le temps obéit."
+];
+
+const CELE_POOL = [
+  {t:"QUÊTE VALIDÉE", m:"Objectif atteint. Butin: clarté + points de dignité."},
+  {t:"INCISION PROPRE", m:"Acte clinique: précis. Fermeture: impeccable."},
+  {t:"PORTAIL REFERMÉ", m:"Boucle mentale scellée. Silence sacré."},
+  {t:"NINJUTSU ADMINISTRATIF", m:"Tu as éliminé la cible sans bruit. Personne n’a rien vu."}
+];
+
+const TIPS_POOL = [
+  {t:"RÈGLE DU LASER", m:"Une seule cible. Pas de multi-onglets. Exécution."},
+  {t:"ANTI-FRICTION", m:"Enlève un obstacle matériel maintenant (dossier, onglet, câble)."},
+  {t:"MICRO-CONTRAT", m:"Fais juste 1 étorion. Après, tu renégocies. (Spoiler: non.)"},
+  {t:"CORPS = INTERRUPTEUR", m:"Épaules basses. Mâchoire relâchée. Le cerveau suit."}
+];
+
+const EMO_NUDGES = [
+  {t:"STOP (30s)", m:"Je remarque l’émotion. 3 respirations lentes. Puis reprise."},
+  {t:"ANCRAGE 5-4-3-2-1", m:"5 vues, 4 touchées, 3 entendues, 2 senties, 1 goûtée."},
+  {t:"DÉFUSION", m:"Remplace « je suis X » par « j’ai la pensée que… »."},
+  {t:"ACTION OPPOSÉE (micro)", m:"Choisis un geste de 30 secondes à l’opposé de l’évitement."}
+];
+
+const EMOTIONS = ["Anxiété","Colère","Tristesse","Honte","Culpabilité","Stress","Frustration","Soulagement","Joie","Fatigue"];
+
+const LS_KEY = "eliminator_unified_singlefile_v1";
+
+const defaultState = {
+  theme:"light",
+  focus:false,
+  showBelowList:false,
+  showCounters:false,
+  countersAutoHideSec:10,
+
+  drawerW:460,
+  rightW:520,
+  activeTab:"inbox",
+  rightTab:"sets",
+
+  appearance:{
+    accentLight:"cyan",
+    accentDark:"lime",
+    barColorLight:"cyan",
+    barColorDark:"lime",
+    fontFamily:"elegant",
+    uiScale:1.00,
+    titleScale:1.18,
+    taskScale:1.50,
+    borders:"on",
+    buttons:"ghost",
+    radius:6,
+    barH:38,
+    chipH:18
+  },
+
+  settings:{
+    celebrationBase:0.18,
+    celebrationAutoCloseSec:11,
+    tipsChance:0.14,
+    tipsMinGapMin:6,
+    nudgeChance:0.10,
+    nudgeMinGapMin:10,
+    keepListInFocus:true
+  },
+
+  timer:{
+    running:true,
+    startedAt:null,
+    pausedAt:null,
+    pausedTotal:0,
+    pomodoroMin:25,
+    pomodoroRunning:false,
+    pomodoroEndsAt:null
+  },
+
+  tasks:[],
+  baseline:{ totalTasks:0, totalEtorions:0 },
+  currentTaskId:null,
+  currentTaskStart:null,
+
+  notes:[],
+  habits:[],
+  history:[],
+
+  kiffance:{ bank: {"5":[], "10":[], "15":[], "25":[]} },
+
+  sets:{ list:[], selectedId:null },
+
+  emotions:{ entries:[] },
+
+  stats:{ etorionsDone:0, tasksDone:0 },
+  streak:{ tasksInARow:0, lastTaskDoneAt:null },
+
+  lastCelebrationAt:null,
+  lastTipAt:null,
+  lastNudgeAt:null,
+
+  undo:[]
+};
+
+function deepAssign(target, src){
+  for(const k in src){
+    if(src[k] && typeof src[k]==="object" && !Array.isArray(src[k]) && target[k]){
+      deepAssign(target[k], src[k]);
+    }else{
+      target[k] = src[k];
+    }
+  }
+}
+
+function seedState(s){
+  // kiffance default
+  const bank = s.kiffance?.bank || (s.kiffance={bank:{"5":[], "10":[], "15":[], "25":[]}}).bank;
+  const emptyAll = ["5","10","15","25"].every(k => Array.isArray(bank[k]) && bank[k].length===0);
+  if(emptyAll){
+    bank["5"]  = ["Bois un verre d’eau.","Respire 5 cycles lents.","Micro-marche 60s.","Étire nuque/épaules 45s.","Nettoie une surface 30s."];
+    bank["10"] = ["Mini-reset: eau + toilettes.","Décharge mentale: 8 lignes.","Rangement éclair: 10 objets.","Fenêtre: 2 min dehors.","Étirements 4 min + eau."];
+    bank["15"] = ["Pause active: marche 10 + eau 5.","Snack simple sans écran.","Étirements 7 + respiration 8."];
+    bank["25"] = ["Vraie pause: 20 min hors écran + 5 min reprise.","Petite marche + retour priorité unique.","Micro-sieste 15–20 min + eau."];
+  }
+
+  // sets default
+  if(!s.sets || !Array.isArray(s.sets.list)) s.sets={list:[],selectedId:null};
+  if(s.sets.list.length===0){
+    const mkSet = (title, unitName, unitCount, items)=>({
+      id: uid(), title, unitName, unitCount,
+      items: items.slice(), categories:[], checks:{}, pinned:false, order:Date.now()+Math.random()
+    });
+    const a = mkSet("HOSPITALIER","Patient",4,["Voir patient","Note","Traitement","Dossier"]);
+    const b = mkSet("CONSULTATION","Patient",6,["Voir patient","Note","Ordonnance","Dossier"]);
+    s.sets.list=[a,b];
+    s.sets.selectedId=a.id;
+  }else{
+    if(!s.sets.selectedId) s.sets.selectedId = s.sets.list[0]?.id || null;
+  }
+
+  if(!s.timer) s.timer = clone(defaultState.timer);
+  if(!s.undo) s.undo = [];
+  return s;
+}
+
+function loadState(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return seedState(clone(defaultState));
+    const parsed = JSON.parse(raw);
+    const merged = clone(defaultState);
+    deepAssign(merged, parsed);
+    return seedState(merged);
+  }catch(e){
+    return seedState(clone(defaultState));
+  }
+}
+let state = loadState();
+function saveState(){ localStorage.setItem(LS_KEY, JSON.stringify(state)); }
+
+/* -------------------------
+   Appearance
+------------------------- */
+function applyAppearance(){
+  document.body.setAttribute("data-theme", state.theme);
+  document.body.setAttribute("data-borders", state.appearance.borders || "on");
+  document.body.setAttribute("data-buttons", state.appearance.buttons || "ghost");
+
+  document.documentElement.style.setProperty("--uiScale", String(state.appearance.uiScale ?? 1.0));
+  document.documentElement.style.setProperty("--titleScale", String(state.appearance.titleScale ?? 1.18));
+  document.documentElement.style.setProperty("--taskScale", String(state.appearance.taskScale ?? 1.5));
+  document.documentElement.style.setProperty("--radius", `${clamp(state.appearance.radius ?? 6, 0, 14)}px`);
+  document.documentElement.style.setProperty("--barH", `${clamp(state.appearance.barH ?? 38, 26, 52)}px`);
+  document.documentElement.style.setProperty("--chipH", `${clamp(state.appearance.chipH ?? 18, 12, 28)}px`);
+  document.documentElement.style.setProperty("--drawerW", `${clamp(state.drawerW||460, 340, 920)}px`);
+  document.documentElement.style.setProperty("--rightW", `${clamp(state.rightW||520, 340, 980)}px`);
+
+  const ff = FONT_FAMILIES[state.appearance.fontFamily] || FONT_FAMILIES.elegant;
+  document.documentElement.style.setProperty("--font", ff);
+
+  const accentKey = (state.theme==="light") ? (state.appearance.accentLight||"cyan") : (state.appearance.accentDark||"lime");
+  const a = ACCENTS[accentKey] || ACCENTS.cyan;
+  document.documentElement.style.setProperty("--accent", a.a);
+  document.documentElement.style.setProperty("--accent2", a.a2);
+
+  const barKey = (state.theme==="light") ? (state.appearance.barColorLight||accentKey) : (state.appearance.barColorDark||accentKey);
+  const b = ACCENTS[barKey] || a;
+  document.documentElement.style.setProperty("--barAccent", b.a);
+  document.documentElement.style.setProperty("--barAccent2", b.a2);
+
+  $("themeLabel").textContent = state.theme==="light" ? "THÈME CLAIR" : "THÈME SOMBRE";
+}
+function setRandomTagline(force=false){
+  const el = $("tagline");
+  if(force || Math.random()<0.25 || !el.textContent.trim()){
+    el.textContent = TAGLINE_POOL[rand(TAGLINE_POOL.length)];
+  }
+}
+function applyFocus(){
+  const app = $("app");
+  if(state.focus) app.classList.add("focusOn");
+  else app.classList.remove("focusOn");
+}
+
+/* -------------------------
+   Confetti
+------------------------- */
+const conf = $("confetti");
+const ctx = conf.getContext("2d");
+let confettiPieces = [];
+let confettiRAF=null;
+
+function resizeCanvas(){
+  conf.width = window.innerWidth * devicePixelRatio;
+  conf.height = window.innerHeight * devicePixelRatio;
+  conf.style.width = window.innerWidth+"px";
+  conf.style.height = window.innerHeight+"px";
+  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+}
+window.addEventListener("resize", resizeCanvas);
+resizeCanvas();
+
+function confettiBurst(strength=1){
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  const n = Math.floor(170*strength);
+  const cx = w/2, cy = h/3;
+
+  for(let i=0;i<n;i++){
+    confettiPieces.push({
+      x:cx, y:cy,
+      vx:(Math.random()-0.5)*12*strength,
+      vy:(Math.random()-0.85)*16*strength,
+      g:(0.33 + Math.random()*0.25)*(0.9 + strength*0.2),
+      r:2 + Math.random()*4*strength,
+      life:90 + Math.random()*70,
+      rot:Math.random()*Math.PI,
+      vr:(Math.random()-0.5)*0.35
+    });
+  }
+  animateConfetti();
+}
+function animateConfetti(){
+  if(confettiRAF) return;
+  const step=()=>{
+    ctx.clearRect(0,0,window.innerWidth,window.innerHeight);
+    confettiPieces = confettiPieces.filter(p=>p.life>0);
+    for(const p of confettiPieces){
+      p.vy += p.g; p.x += p.vx; p.y += p.vy; p.rot += p.vr; p.life -= 1;
+      ctx.save();
+      ctx.translate(p.x,p.y);
+      ctx.rotate(p.rot);
+      ctx.globalAlpha = 0.84;
+      ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue("--fg");
+      ctx.fillRect(-p.r, -p.r, p.r*2, p.r*2);
+      ctx.restore();
+    }
+    if(confettiPieces.length>0) confettiRAF = requestAnimationFrame(step);
+    else{ cancelAnimationFrame(confettiRAF); confettiRAF=null; ctx.clearRect(0,0,window.innerWidth,window.innerHeight); }
+  };
+  confettiRAF = requestAnimationFrame(step);
+}
+
+/* -------------------------
+   Modals
+------------------------- */
+let celeTimer=null, tipsTimer=null, nudgeTimer=null, countersTimer=null;
+
+function openModal(id){
+  $("modalBack").style.display="block";
+  $(id).style.display="flex";
+}
+function closeAllModals(){
+  ["notesModal","celeModal","tipsModal","emoNudgeModal","setEditModal","exportModal"].forEach(id=>{
+    const el=$(id); if(el) el.style.display="none";
+  });
+  $("modalBack").style.display="none";
+}
+$("modalBack").addEventListener("click", closeAllModals);
+["notesModal","celeModal","tipsModal","emoNudgeModal","setEditModal","exportModal"].forEach(id=>{
+  const el=$(id); el.addEventListener("click", closeAllModals);
+});
+
+function showCelebration(){
+  const pick = CELE_POOL[rand(CELE_POOL.length)];
+  $("celeTitle").textContent = pick.t;
+  $("celeMsg").textContent = pick.m;
+  const p = computeProgress();
+  const done = (p.baseT - p.remT);
+  $("celeSub").textContent = `${done} ${plural(done,"tâche","tâches")} dégommée(s) · continue`;
+  confettiBurst(1.25);
+  openModal("celeModal");
+  state.lastCelebrationAt = Date.now();
+  saveState();
+  const sec = clamp(parseInt(state.settings.celebrationAutoCloseSec,10)||11, 5, 20);
+  if(celeTimer) clearTimeout(celeTimer);
+  celeTimer = setTimeout(closeAllModals, sec*1000);
+}
+function showTip(){
+  const pick = TIPS_POOL[rand(TIPS_POOL.length)];
+  $("tipsTitle").textContent = pick.t;
+  $("tipsMsg").textContent = pick.m;
+  $("tipsSub").textContent = "Conseil bref → retour au flow.";
+  openModal("tipsModal");
+  state.lastTipAt = Date.now();
+  saveState();
+  if(tipsTimer) clearTimeout(tipsTimer);
+  tipsTimer = setTimeout(closeAllModals, 9000);
+}
+function showNudge(){
+  const pick = EMO_NUDGES[rand(EMO_NUDGES.length)];
+  $("emoNudgeTitle").textContent = pick.t;
+  $("emoNudgeMsg").textContent = pick.m;
+  $("emoNudgeSub").textContent = "Micro-régulation → puis reprise.";
+  openModal("emoNudgeModal");
+  state.lastNudgeAt = Date.now();
+  saveState();
+  if(nudgeTimer) clearTimeout(nudgeTimer);
+  nudgeTimer = setTimeout(closeAllModals, 9000);
+}
+function minutesSince(ts){
+  if(!ts) return 9999;
+  return (Date.now()-ts)/60000;
+}
+function maybeShowCelebration(){
+  const base = clamp(Number(state.settings.celebrationBase)||0.18, 0, 1);
+  const gap = minutesSince(state.lastCelebrationAt);
+  const bonusGap = gap >= 10 ? 0.12 : 0;
+  const chance = clamp(base + bonusGap, 0, 0.85);
+  if(Math.random() < chance) showCelebration();
+}
+function maybeTip(){
+  const chance = clamp(Number(state.settings.tipsChance)||0.14, 0, 1);
+  if(minutesSince(state.lastTipAt) < (state.settings.tipsMinGapMin||6)) return;
+  if(Math.random() < chance) showTip();
+}
+function maybeNudge(){
+  const chance = clamp(Number(state.settings.nudgeChance)||0.10, 0, 1);
+  if(minutesSince(state.lastNudgeAt) < (state.settings.nudgeMinGapMin||10)) return;
+  if(Math.random() < chance) showNudge();
+}
+
+/* -------------------------
+   Tasks parsing & core
+------------------------- */
+function isAllCapsLine(line){
+  const t=line.trim();
+  if(!t) return false;
+  const hasLetters = /[A-Za-zÀ-ÖØ-öø-ÿ]/.test(t);
+  if(!hasLetters) return false;
+  return t === t.toUpperCase() && t.length <= 90;
+}
+function parseTaskLine(line){
+  const raw=line.trim();
+  if(!raw) return null;
+  const cleaned = raw.replace(/^[-*•\s]+/,"").trim();
+  if(!cleaned) return null;
+
+  let et=null, title=cleaned;
+  const m = cleaned.match(/^(.*?)(?:\s*[-–—]\s*|\s+)(\d+)\s*$/);
+  if(m){ title=m[1].trim(); et=parseInt(m[2],10); }
+  title = title.replace(/\s+/g," ").trim();
+  if(!title) return null;
+  if(et!==null) et = clamp(et,1,99);
+  return {title, etorions: et};
+}
+function importFromInbox(text){
+  const lines = (text||"").split(/\r?\n/).map(l=>l.trim()).filter(Boolean);
+  let cat="INBOX";
+  const out=[];
+  for(const line of lines){
+    if(isAllCapsLine(line)){ cat=line.trim().toUpperCase(); continue; }
+    const p=parseTaskLine(line);
+    if(!p) continue;
+    const eto = p.etorions ?? 1;
+    out.push({
+      id:uid(),
+      title:p.title,
+      cat,
+      etorionsTotal:eto,
+      etorionsLeft:eto,
+      pinned:false,
+      done:false,
+      createdAt:nowISO(),
+      doneAt:null
+    });
+  }
+  return out;
+}
+
+function activeTasks(){ return state.tasks.filter(t=>!t.done); }
+function getTaskById(id){ return state.tasks.find(t=>t.id===id) || null; }
+function sortTasks(list){
+  return [...list].sort((a,b)=>{
+    if(a.pinned && !b.pinned) return -1;
+    if(!a.pinned && b.pinned) return 1;
+    return (a.createdAt||"").localeCompare(b.createdAt||"");
+  });
+}
+function roulettePick(){
+  const list = sortTasks(activeTasks());
+  if(list.length===0) return null;
+  const pinned = list.filter(t=>t.pinned);
+  const pool = pinned.length ? pinned : list;
+  return pool[rand(pool.length)];
+}
+function setCurrentTask(id){
+  state.currentTaskId = id;
+  state.currentTaskStart = Date.now();
+  if(!state.timer.startedAt) state.timer.startedAt = Date.now();
+}
+function ensureCurrentTask(){
+  const list = activeTasks();
+  if(list.length===0){ state.currentTaskId=null; state.currentTaskStart=null; return; }
+  const cur = getTaskById(state.currentTaskId);
+  if(!cur || cur.done){
+    const pinned = list.find(t=>t.pinned);
+    setCurrentTask((pinned||list[0]).id);
+  }
+}
+
+function recomputeBaselineIfNeeded(){
+  if(state.baseline.totalTasks===0 && state.baseline.totalEtorions===0 && state.tasks.length>0){
+    const allActive = activeTasks();
+    state.baseline.totalTasks = allActive.length;
+    state.baseline.totalEtorions = allActive.reduce((a,t)=>a+(t.etorionsTotal||0),0);
+  }
+}
+function computeProgress(){
+  const baseT = state.baseline.totalTasks || 0;
+  const baseE = state.baseline.totalEtorions || 0;
+  const rem = activeTasks();
+  const remT = rem.length;
+  const remE = rem.reduce((a,t)=>a+(t.etorionsLeft||0),0);
+  const pct = (baseT<=0) ? 100 : clamp(Math.round((remT/baseT)*100), 0, 100);
+  return { baseT, baseE, remT, remE, pct };
+}
+
+/* -------------------------
+   Undo
+------------------------- */
+function pushUndo(label){
+  state.undo.unshift({
+    label, at:Date.now(),
+    tasks: clone(state.tasks),
+    baseline: clone(state.baseline),
+    currentTaskId: state.currentTaskId,
+    currentTaskStart: state.currentTaskStart,
+    stats: clone(state.stats),
+    streak: clone(state.streak),
+    lastCelebrationAt: state.lastCelebrationAt,
+    notes: clone(state.notes),
+    habits: clone(state.habits),
+    sets: clone(state.sets),
+    emotions: clone(state.emotions),
+    history: clone(state.history),
+    timer: clone(state.timer),
+    appearance: clone(state.appearance),
+    settings: clone(state.settings)
+  });
+  state.undo = state.undo.slice(0, 12);
+}
+function undo(){
+  const snap = state.undo.shift();
+  if(!snap) return;
+  state.tasks = snap.tasks;
+  state.baseline = snap.baseline;
+  state.currentTaskId = snap.currentTaskId;
+  state.currentTaskStart = snap.currentTaskStart;
+  state.stats = snap.stats;
+  state.streak = snap.streak;
+  state.lastCelebrationAt = snap.lastCelebrationAt;
+  state.notes = snap.notes;
+  state.habits = snap.habits;
+  state.sets = snap.sets;
+  state.emotions = snap.emotions;
+  state.history = snap.history;
+  state.timer = snap.timer;
+  state.appearance = snap.appearance;
+  state.settings = snap.settings;
+  saveState();
+  renderAll();
+  renderDrawer();
+  renderRight();
+}
+
+/* -------------------------
+   Notes
+------------------------- */
+function addNote(text){
+  const t=(text||"").trim();
+  if(!t) return;
+  state.notes.unshift({ id:uid(), text:t, at:nowISO() });
+}
+function renderNotes(){
+  const list = state.notes || [];
+  if(list.length===0){
+    $("notesList").innerHTML = "<div class='small'>Aucune note.</div>";
+    return;
+  }
+  $("notesList").innerHTML = list.slice(0,80).map(n=>{
+    const dt=new Date(n.at);
+    const stamp = dt.toLocaleString("fr-BE",{hour:"2-digit",minute:"2-digit", day:"2-digit", month:"2-digit"});
+    return `<div style="padding:8px 6px; border-bottom:1px solid var(--line)">
+      <div style="font-family:var(--mono); color:var(--muted); font-size:11px; letter-spacing:.06em">${stamp}</div>
+      <div style="white-space:pre-wrap; font-size:13px">${escapeHTML(n.text)}</div>
+    </div>`;
+  }).join("");
+}
+
+/* -------------------------
+   Timer
+------------------------- */
+function timerNowMs(){
+  if(!state.timer.startedAt) return 0;
+  const now = Date.now();
+  const paused = state.timer.pausedTotal || 0;
+  const extraPaused = state.timer.pausedAt ? (now - state.timer.pausedAt) : 0;
+  return Math.max(0, now - state.timer.startedAt - paused - extraPaused);
+}
+function togglePause(){
+  if(!state.timer.startedAt) state.timer.startedAt = Date.now();
+  if(state.timer.pausedAt){
+    state.timer.pausedTotal = (state.timer.pausedTotal||0) + (Date.now() - state.timer.pausedAt);
+    state.timer.pausedAt = null;
+    state.timer.running = true;
+  }else{
+    state.timer.pausedAt = Date.now();
+    state.timer.running = false;
+  }
+  saveState();
+  renderAll();
+}
+function renderTimer(){
+  $("pillTimer").textContent = fmtMMSS(timerNowMs());
+}
+let timerInterval=null;
+function startTimerLoop(){
+  if(timerInterval) clearInterval(timerInterval);
+  timerInterval = setInterval(()=>{
+    if(state.showCounters) renderTimer();
+    $("btnPause").textContent = state.timer.pausedAt ? "▶" : "⏸";
+  }, 500);
+}
+
+/* -------------------------
+   Complete / Etorion
+------------------------- */
+function snapshotDay(){
+  const dk = dayKey();
+  const doneToday = state.tasks.filter(t=>t.done && t.doneAt && t.doneAt.startsWith(dk));
+  const active = activeTasks();
+  const entry = {
+    day: dk,
+    doneTasks: doneToday.length,
+    remainingTasks: active.length,
+    doneEtorions: state.stats.etorionsDone||0,
+    baselineEtorions: state.baseline.totalEtorions||0
+  };
+  const idx = state.history.findIndex(x=>x.day===dk);
+  if(idx>=0) state.history[idx]=entry;
+  else state.history.unshift(entry);
+}
+function completeTask(taskId){
+  const t=getTaskById(taskId);
+  if(!t || t.done) return;
+
+  pushUndo("taskComplete");
+  t.done = true;
+  t.doneAt = nowISO();
+  state.stats.tasksDone = (state.stats.tasksDone||0) + 1;
+
+  const now=Date.now();
+  const last=state.streak.lastTaskDoneAt;
+  if(last && (now-last) <= 20*60*1000) state.streak.tasksInARow = (state.streak.tasksInARow||0) + 1;
+  else state.streak.tasksInARow = 1;
+  state.streak.lastTaskDoneAt = now;
+
+  confettiBurst(1.15);
+  maybeShowCelebration();
+  maybeTip();
+  maybeNudge();
+
+  snapshotDay();
+  ensureCurrentTask();
+  saveState();
+  renderAll();
+}
+function degommeEtorion(){
+  const t=getTaskById(state.currentTaskId);
+  if(!t || t.done) return;
+
+  pushUndo("etorion");
+  if(typeof t.etorionsLeft!=="number") t.etorionsLeft = t.etorionsTotal||1;
+  t.etorionsLeft = clamp(t.etorionsLeft - 1, 0, 99);
+  state.stats.etorionsDone = (state.stats.etorionsDone||0) + 1;
+
+  if(t.etorionsLeft<=0){
+    completeTask(t.id);
+    return;
+  }
+  snapshotDay();
+  saveState();
+  renderAll();
+}
+
+/* -------------------------
+   Counters
+------------------------- */
+function setCountersVisible(on, autoHide=true){
+  state.showCounters = !!on;
+  const pills = ["pillTasks","pillEto","pillDone","pillTimer"].map($);
+  pills.forEach(p=>p.classList.toggle("hidden", !state.showCounters));
+  saveState();
+
+  if(countersTimer) clearTimeout(countersTimer);
+  if(on && autoHide){
+    countersTimer = setTimeout(()=>{
+      state.showCounters=false;
+      pills.forEach(p=>p.classList.add("hidden"));
+      saveState();
+    }, clamp(state.countersAutoHideSec||10, 3, 30)*1000);
+  }
+}
+
+/* -------------------------
+   Sets / Habits / Emotions (minimal, functional)
+------------------------- */
+function getSetById(id){ return state.sets.list.find(s=>s.id===id) || null; }
+function selectedSet(){ return getSetById(state.sets.selectedId) || state.sets.list[0] || null; }
+function ensureSelectedSet(){
+  if(state.sets.list.length===0) return;
+  if(!state.sets.selectedId || !getSetById(state.sets.selectedId)) state.sets.selectedId = state.sets.list[0].id;
+}
+function initSetChecksForToday(set){
+  const dk=dayKey();
+  if(!set.checks) set.checks={};
+  if(!set.checks[dk]) set.checks[dk]={};
+}
+function setCheckKey(uIndex,iIndex){ return `u${uIndex}_i${iIndex}`; }
+function toggleSetCheck(setId,uIndex,iIndex){
+  const set=getSetById(setId); if(!set) return;
+  initSetChecksForToday(set);
+  const dk=dayKey();
+  const k=setCheckKey(uIndex,iIndex);
+  set.checks[dk][k] = !set.checks[dk][k];
+}
+function summarizeSetToday(setId){
+  const set=getSetById(setId); if(!set) return {done:0,total:0};
+  initSetChecksForToday(set);
+  const dk=dayKey();
+  const checks=set.checks[dk]||{};
+  const total=(set.unitCount||0)*(set.items?.length||0);
+  const done=Object.values(checks).filter(Boolean).length;
+  return {done,total};
+}
+function addSet(){
+  const s = { id:uid(), title:"NOUVEAU SET", unitName:"Item", unitCount:3,
+    items:["Étape 1","Étape 2","Étape 3"], categories:[], checks:{}, pinned:false, order:Date.now() };
+  state.sets.list.push(s);
+  state.sets.selectedId=s.id;
+}
+function deleteSet(id){
+  state.sets.list = state.sets.list.filter(s=>s.id!==id);
+  ensureSelectedSet();
+}
+function addHabit(name, slots){
+  const nm=(name||"").trim(); if(!nm) return;
+  const sl=clamp(parseInt(slots,10)||8, 3, 12);
+  state.habits.push({ id:uid(), name:nm, checks:Array.from({length:sl},()=>false), createdAt:nowISO() });
+}
+function habitProgress(h){
+  const done=h.checks.filter(Boolean).length;
+  const tot=h.checks.length;
+  return {done, tot, pct: tot?Math.round(done/tot*100):0};
+}
+function toggleHabitCheck(hId, idx){
+  const h=state.habits.find(x=>x.id===hId); if(!h) return;
+  h.checks[idx]=!h.checks[idx];
+}
+function addEmotionEntry(e){ state.emotions.entries.unshift(e); }
+function emotionsToday(){
+  const dk=dayKey();
+  return (state.emotions.entries||[]).filter(e=>e.day===dk);
+}
+function avgIntensity(list){
+  if(!list.length) return 0;
+  return Math.round(list.reduce((a,b)=>a+(Number(b.intensity)||0),0)/list.length);
+}
+function topEmotion(list){
+  if(!list.length) return null;
+  const m=new Map();
+  list.forEach(e=>m.set(e.emotion,(m.get(e.emotion)||0)+1));
+  let best=null, bestv=-1;
+  for(const [k,v] of m.entries()) if(v>bestv){best=k; bestv=v;}
+  return best;
+}
+
+/* -------------------------
+   Render main UI
+------------------------- */
+function renderHUD(){
+  recomputeBaselineIfNeeded();
+  const p = computeProgress();
+  $("pillTasks").textContent = `${p.remT}/${p.baseT} ${plural(p.baseT,"tâche","tâches")}`;
+  $("pillEto").textContent = `${p.remE}/${p.baseE} étorions`;
+  const done = (p.baseT - p.remT);
+  $("pillDone").textContent = `${done} ${plural(done,"faite","faites")}`;
+}
+function renderProgress(){
+  const p=computeProgress();
+  $("taskBarFill").style.width = `${p.pct}%`;
+  $("taskBarPct").textContent = `${p.pct}%`;
+  $("barInfo").textContent = `${p.remT} restantes sur ${p.baseT}`;
+}
+function renderCurrent(){
+  ensureCurrentTask();
+  const t=getTaskById(state.currentTaskId);
+  if(!t){
+    $("taskName").textContent="Aucune tâche";
+    $("chips").innerHTML="";
+    $("btnEtorion").style.opacity=0.45;
+    $("btnEtorion").style.pointerEvents="none";
+    return;
+  }
+  $("btnEtorion").style.opacity=1;
+  $("btnEtorion").style.pointerEvents="auto";
+  $("taskName").textContent=t.title;
+
+  const total=t.etorionsTotal||1;
+  const left=(typeof t.etorionsLeft==="number")?t.etorionsLeft:total;
+  const chips=[];
+  for(let i=0;i<total;i++) chips.push(`<div class="chip ${i<left?"on":""}"></div>`);
+  $("chips").innerHTML = chips.join("");
+
+  if(!state.currentTaskStart) state.currentTaskStart=Date.now();
+  if(!state.timer.startedAt) state.timer.startedAt=Date.now();
+}
+function applyListVisible(){
+  const el=$("belowList");
+  const show = !!state.showBelowList;
+  el.classList.toggle("show", show && (!state.focus || state.settings.keepListInFocus));
+}
+function moveTask(id, delta){
+  const idx=state.tasks.findIndex(t=>t.id===id);
+  if(idx<0) return;
+  const j=clamp(idx+delta,0,state.tasks.length-1);
+  const [it]=state.tasks.splice(idx,1);
+  state.tasks.splice(j,0,it);
+}
+function renderBelowList(){
+  const box=$("belowTasks");
+  const list=sortTasks(activeTasks());
+  if(list.length===0){ box.innerHTML=`<div class="small">Aucune tâche.</div>`; return; }
+  box.innerHTML = list.slice(0,80).map(t=>{
+    const et=t.etorionsTotal||1;
+    const left=t.etorionsLeft??et;
+    const isCur=t.id===state.currentTaskId;
+    return `
+      <div class="taskRow" style="${isCur?"background:linear-gradient(180deg,var(--glass2),transparent); border-radius:var(--radius2); border:1px solid var(--line)":""}">
+        <div class="t">${escapeHTML(t.title)}</div>
+        <div class="meta">${left}/${et}</div>
+        <div class="tools">
+          <div class="toolBtn" data-act="up" data-id="${t.id}" title="Monter">↑</div>
+          <div class="toolBtn" data-act="down" data-id="${t.id}" title="Descendre">↓</div>
+          <div class="toolBtn" data-act="pin" data-id="${t.id}" title="Épingler">${t.pinned?"■":"□"}</div>
+          <div class="toolBtn" data-act="go" data-id="${t.id}" title="Cibler">◎</div>
+          <div class="toolBtn" data-act="done" data-id="${t.id}" title="Dégommée">✓</div>
+        </div>
+      </div>`;
+  }).join("");
+  box.querySelectorAll(".toolBtn").forEach(b=>{
+    b.onclick = ()=>{
+      const id=b.getAttribute("data-id");
+      const act=b.getAttribute("data-act");
+      const t=getTaskById(id); if(!t) return;
+
+      pushUndo("listAction");
+      if(act==="up") moveTask(id,-1);
+      if(act==="down") moveTask(id,1);
+      if(act==="pin") t.pinned=!t.pinned;
+      if(act==="go") setCurrentTask(id);
+      if(act==="done") completeTask(id);
+
+      snapshotDay();
+      saveState();
+      renderAll();
+    };
+  });
+}
+function renderAll(){
+  ensureSelectedSet();
+  applyAppearance();
+  applyFocus();
+  setRandomTagline();
+  recomputeBaselineIfNeeded();
+  ensureCurrentTask();
+
+  renderHUD();
+  renderProgress();
+  renderCurrent();
+  renderBelowList();
+  applyListVisible();
+
+  setCountersVisible(state.showCounters, false);
+
+  $("btnUndo").style.opacity = state.undo.length ? 1 : 0.45;
+  $("btnUndo").style.pointerEvents = state.undo.length ? "auto" : "none";
+
+  $("btnPause").textContent = state.timer.pausedAt ? "▶" : "⏸";
+}
+
+/* -------------------------
+   Drawer + Right panel
+------------------------- */
+function mkSection(title){
+  const s=document.createElement("div"); s.className="section";
+  const h=document.createElement("h3"); h.textContent=title;
+  s.appendChild(h);
+  return s;
+}
+function mkBtn(text, cls="btn"){
+  const b=document.createElement("button");
+  b.className=cls;
+  b.textContent=text;
+  return b;
+}
+
+function openDrawer(){ $("drawerBack").classList.add("show"); $("drawer").classList.add("open"); renderDrawer(); }
+function closeDrawer(){ $("drawerBack").classList.remove("show"); $("drawer").classList.remove("open"); }
+function openRight(){ $("rightBack").classList.add("show"); $("rightPanel").classList.add("open"); renderRight(); }
+function closeRight(){ $("rightBack").classList.remove("show"); $("rightPanel").classList.remove("open"); }
+
+function initResizer(resId, which){
+  const res=$(resId);
+  let dragging=false, startX=0, startW=0;
+  res.addEventListener("mousedown",(e)=>{
+    dragging=true;
+    startX=e.clientX;
+    startW=clamp(which==="left"?(state.drawerW||460):(state.rightW||520), 340, 980);
+    e.preventDefault();
+  });
+  window.addEventListener("mousemove",(e)=>{
+    if(!dragging) return;
+    const dx=e.clientX-startX;
+    if(which==="left") state.drawerW = clamp(startW + dx, 340, 980);
+    else state.rightW = clamp(startW - dx, 340, 980);
+    applyAppearance();
+  });
+  window.addEventListener("mouseup",()=>{
+    if(!dragging) return;
+    dragging=false;
+    saveState();
+  });
+}
+initResizer("drawerResizer","left");
+initResizer("rightResizer","right");
+
+const TAB_DEFS = [
+  { key:"inbox", label:"INBOX" },
+  { key:"liste", label:"LISTE" },
+  { key:"kiff",  label:"KIFFANCE" },
+  { key:"flow",  label:"FLOW" },
+  { key:"app",   label:"APPARENCE" },
+  { key:"hist",  label:"HIST" }
+];
+
+function buildTabs(){
+  const el=$("tabs"); el.innerHTML="";
+  TAB_DEFS.forEach(t=>{
+    const b=document.createElement("div");
+    b.className="tab"+(state.activeTab===t.key?" active":"");
+    b.textContent=t.label;
+    b.onclick=()=>{ state.activeTab=t.key; saveState(); renderDrawer(); };
+    el.appendChild(b);
+  });
+}
+function renderDrawer(){
+  buildTabs();
+  const body=$("drawerBody");
+  body.innerHTML="";
+  if(state.activeTab==="inbox") body.appendChild(viewInbox());
+  if(state.activeTab==="liste") body.appendChild(viewListe());
+  if(state.activeTab==="kiff")  body.appendChild(viewKiffance());
+  if(state.activeTab==="flow")  body.appendChild(viewFlow());
+  if(state.activeTab==="app")   body.appendChild(viewAppearance());
+  if(state.activeTab==="hist")  body.appendChild(viewHistory());
+}
+
+/* Drawer views */
+function viewInbox(){
+  const wrap=document.createElement("div");
+  const s1=mkSection("Importer des tâches");
+  const ta=document.createElement("textarea");
+  ta.placeholder="COLLE ICI.\n\nExemple:\nADMIN\n- Mail ordre 2\n- Appeler X 1\n\nCLINIQUE\n- Rapport Y 6\n\n(Ligne en MAJUSCULES = catégorie)";
+  s1.appendChild(ta);
+
+  const row=document.createElement("div");
+  row.className="row"; row.style.marginTop="8px";
+
+  const btnImport = mkBtn("IMPORTER","btn primary");
+  btnImport.onclick=()=>{
+    const items=importFromInbox(ta.value||"");
+    if(!items.length) return;
+    pushUndo("import");
+    state.tasks.push(...items);
+    state.baseline.totalTasks = activeTasks().length;
+    state.baseline.totalEtorions = activeTasks().reduce((a,t)=>a+(t.etorionsTotal||0),0);
+    ensureCurrentTask();
+    snapshotDay();
+    saveState();
+    renderAll();
+    ta.value="";
+    closeDrawer();
+  };
+
+  const btnAppend = mkBtn("AJOUTER SANS RESET","btn");
+  btnAppend.onclick=()=>{
+    const items=importFromInbox(ta.value||"");
+    if(!items.length) return;
+    pushUndo("appendImport");
+    state.tasks.push(...items);
+    recomputeBaselineIfNeeded();
+    ensureCurrentTask();
+    snapshotDay();
+    saveState();
+    renderAll();
+    ta.value="";
+  };
+
+  const btnDemo = mkBtn("EXEMPLE","btn");
+  btnDemo.onclick=()=>{
+    ta.value =
+`ADMIN
+- Répondre à X 2
+- Téléphoner à Y 1
+
+CLINIQUE
+- Rapport Z 6
+- Appeler médecin traitant 1
+
+PERSO
+- Lessive 2
+- Ranger sac 2`;
+  };
+
+  row.appendChild(btnImport);
+  row.appendChild(btnAppend);
+  row.appendChild(btnDemo);
+  s1.appendChild(row);
+
+  const s2=mkSection("Gestion rapide");
+  const r2=document.createElement("div"); r2.className="row";
+
+  const btnReset = mkBtn("RESET BASELINE","btn");
+  btnReset.onclick=()=>{
+    pushUndo("resetBaseline");
+    state.baseline.totalTasks = activeTasks().length;
+    state.baseline.totalEtorions = activeTasks().reduce((a,t)=>a+(t.etorionsTotal||0),0);
+    snapshotDay(); saveState(); renderAll();
+  };
+
+  const btnClearDone = mkBtn("SUPPRIMER FINIES","btn");
+  btnClearDone.onclick=()=>{
+    pushUndo("clearDone");
+    state.tasks = state.tasks.filter(t=>!t.done);
+    state.baseline.totalTasks = activeTasks().length;
+    state.baseline.totalEtorions = activeTasks().reduce((a,t)=>a+(t.etorionsTotal||0),0);
+    ensureCurrentTask();
+    snapshotDay(); saveState(); renderAll();
+  };
+
+  const btnWipe = mkBtn("TOUT VIDER","btn");
+  btnWipe.onclick=()=>{
+    if(!confirm("Tout effacer ?")) return;
+    pushUndo("wipe");
+    state.tasks=[];
+    state.baseline={totalTasks:0,totalEtorions:0};
+    state.currentTaskId=null;
+    state.stats={etorionsDone:0,tasksDone:0};
+    state.streak={tasksInARow:0,lastTaskDoneAt:null};
+    snapshotDay(); saveState(); renderAll();
+  };
+
+  r2.appendChild(btnReset);
+  r2.appendChild(btnClearDone);
+  r2.appendChild(btnWipe);
+  s2.appendChild(r2);
+
+  wrap.appendChild(s1);
+  wrap.appendChild(document.createElement("div")).style.height="10px";
+  wrap.appendChild(s2);
+  return wrap;
+}
+
+function viewListe(){
+  const wrap=document.createElement("div");
+  const s=mkSection("Liste (actives + done)");
+  const list=document.createElement("div");
+
+  const act=sortTasks(activeTasks());
+  const done=state.tasks.filter(t=>t.done).slice().sort((a,b)=>(b.doneAt||"").localeCompare(a.doneAt||"")).slice(0,18);
+
+  if(act.length===0 && done.length===0){
+    list.innerHTML = `<div class="small">Rien ici. Menu → Inbox pour importer.</div>`;
+  }else{
+    list.innerHTML = [
+      ...act.map(t=>{
+        const et=t.etorionsTotal||1;
+        const left=t.etorionsLeft??et;
+        return `
+        <div class="taskRow">
+          <div class="t">${escapeHTML(t.title)} ${t.cat?`<span style="color:var(--muted); font-family:var(--mono); font-size:11px">[${escapeHTML(t.cat)}]</span>`:""}</div>
+          <div class="meta">${left}/${et}</div>
+          <div class="tools">
+            <div class="toolBtn" data-act="up" data-id="${t.id}" title="Monter">↑</div>
+            <div class="toolBtn" data-act="down" data-id="${t.id}" title="Descendre">↓</div>
+            <div class="toolBtn" data-act="pin" data-id="${t.id}" title="Épingler">${t.pinned?"■":"□"}</div>
+            <div class="toolBtn" data-act="go" data-id="${t.id}" title="Cibler">◎</div>
+            <div class="toolBtn" data-act="done" data-id="${t.id}" title="Dégommée">✓</div>
+          </div>
+        </div>`;
+      }),
+      done.length?`<div class="small" style="padding:10px 6px">DONE (last ${done.length})</div>`:"",
+      ...done.map(t=>`
+        <div class="taskRow" style="opacity:.55">
+          <div class="t">${escapeHTML(t.title)} ${t.cat?`<span style="color:var(--muted); font-family:var(--mono); font-size:11px">[${escapeHTML(t.cat)}]</span>`:""}</div>
+          <div class="meta">✓</div>
+          <div class="tools">
+            <div class="toolBtn" data-act="revive" data-id="${t.id}" title="Réactiver">↺</div>
+          </div>
+        </div>
+      `)
+    ].join("");
+  }
+
+  s.appendChild(list);
+
+  list.querySelectorAll(".toolBtn").forEach(b=>{
+    b.onclick = ()=>{
+      const id=b.getAttribute("data-id");
+      const act=b.getAttribute("data-act");
+      const t=getTaskById(id); if(!t) return;
+
+      pushUndo("listeAction");
+      if(act==="up") moveTask(id,-1);
+      if(act==="down") moveTask(id,1);
+      if(act==="pin") t.pinned=!t.pinned;
+      if(act==="go") setCurrentTask(id);
+      if(act==="done") completeTask(id);
+      if(act==="revive"){ t.done=false; t.doneAt=null; if(typeof t.etorionsLeft!=="number") t.etorionsLeft=t.etorionsTotal||1; }
+
+      snapshotDay(); saveState(); renderAll(); renderDrawer();
+    };
+  });
+
+  const tools=mkSection("Outils");
+  const row=document.createElement("div"); row.className="row";
+  const btnExport=mkBtn("EXPORT","btn primary");
+  btnExport.onclick=()=>{ openModal("exportModal"); renderExport("text"); };
+  const btnBaseline=mkBtn("BASELINE=ACTIF","btn");
+  btnBaseline.onclick=()=>{
+    pushUndo("baselineActive");
+    state.baseline.totalTasks=activeTasks().length;
+    state.baseline.totalEtorions=activeTasks().reduce((a,t)=>a+(t.etorionsTotal||0),0);
+    snapshotDay(); saveState(); renderAll(); renderDrawer();
+  };
+  row.appendChild(btnExport);
+  row.appendChild(btnBaseline);
+  tools.appendChild(row);
+
+  wrap.appendChild(s);
+  wrap.appendChild(document.createElement("div")).style.height="10px";
+  wrap.appendChild(tools);
+  return wrap;
+}
+
+function viewKiffance(){
+  const wrap=document.createElement("div");
+  const s=mkSection("Banque de kiffance");
+  const small=document.createElement("div");
+  small.className="small";
+  small.textContent="Édite les listes ci-dessous. « Tirer » te propose une pause.";
+  s.appendChild(small);
+
+  const mkBucket=(min)=>{
+    const b=mkSection(`${min} minutes`);
+    const ta=document.createElement("textarea");
+    ta.value=(state.kiffance.bank[String(min)]||[]).join("\n");
+    ta.style.minHeight="150px";
+    b.appendChild(ta);
+
+    const r=document.createElement("div");
+    r.className="row"; r.style.marginTop="8px";
+
+    const save=mkBtn("SAUVER","btn primary");
+    save.onclick=()=>{
+      pushUndo("kiffSave");
+      const lines=ta.value.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+      state.kiffance.bank[String(min)] = lines.slice(0,80);
+      saveState();
+      renderAll();
+    };
+
+    const pick=mkBtn("TIRER","btn");
+    pick.onclick=()=>{
+      const arr=state.kiffance.bank[String(min)]||[];
+      if(!arr.length) return;
+      $("tipsTitle").textContent=`KIFFANCE ${min} MIN`;
+      $("tipsMsg").textContent=arr[rand(arr.length)];
+      $("tipsSub").textContent="Pause guidée → puis reprise.";
+      openModal("tipsModal");
+    };
+
+    r.appendChild(save);
+    r.appendChild(pick);
+    b.appendChild(r);
+    return b;
+  };
+
+  wrap.appendChild(s);
+  wrap.appendChild(document.createElement("div")).style.height="10px";
+  wrap.appendChild(mkBucket(5));
+  wrap.appendChild(document.createElement("div")).style.height="10px";
+  wrap.appendChild(mkBucket(10));
+  wrap.appendChild(document.createElement("div")).style.height="10px";
+  wrap.appendChild(mkBucket(15));
+  wrap.appendChild(document.createElement("div")).style.height="10px";
+  wrap.appendChild(mkBucket(25));
+  return wrap;
+}
+
+function viewFlow(){
+  const wrap=document.createElement("div");
+  const s=mkSection("Flow / cadence");
+
+  const mkNum=(label,key,min,max,step=1,asFloat=false)=>{
+    const box=document.createElement("div");
+    const l=document.createElement("div"); l.className="small"; l.style.marginBottom="6px"; l.textContent=label;
+    const inp=document.createElement("input");
+    inp.type="number"; inp.step=String(step); inp.min=String(min); inp.max=String(max);
+    inp.value=String(state.settings[key]??"");
+    inp.onchange=()=>{
+      const v = asFloat ? parseFloat(inp.value) : parseInt(inp.value,10);
+      state.settings[key]=clamp(isFinite(v)?v:min, min, max);
+      saveState();
+    };
+    box.appendChild(l); box.appendChild(inp);
+    return box;
+  };
+
+  const row=document.createElement("div"); row.className="row";
+  row.appendChild(mkNum("Chance celebration (0-1)","celebrationBase",0,1,0.01,true));
+  row.appendChild(mkNum("Auto-close (sec)","celebrationAutoCloseSec",5,20,1,false));
+  row.appendChild(mkNum("Auto-hide compteurs (sec)","countersAutoHideSec",3,30,1,false));
+  s.appendChild(row);
+
+  const s2=mkSection("Actions");
+  const r=document.createElement("div"); r.className="row";
+  const b1=mkBtn("CONSEIL","btn");
+  b1.onclick=showTip;
+  const b2=mkBtn("MICRO-RÉGULATION","btn");
+  b2.onclick=showNudge;
+  r.appendChild(b1); r.appendChild(b2);
+  s2.appendChild(r);
+
+  wrap.appendChild(s);
+  wrap.appendChild(document.createElement("div")).style.height="10px";
+  wrap.appendChild(s2);
+  return wrap;
+}
+
+function viewAppearance(){
+  const wrap=document.createElement("div");
+  const s=mkSection("Apparence");
+
+  const mkSelect=(label,value,options,onChange)=>{
+    const box=document.createElement("div");
+    const l=document.createElement("div"); l.className="small"; l.style.marginBottom="6px"; l.textContent=label;
+    const sel=document.createElement("select");
+    options.forEach(o=>{
+      const op=document.createElement("option"); op.value=o.v; op.textContent=o.t;
+      if(o.v===value) op.selected=true;
+      sel.appendChild(op);
+    });
+    sel.onchange=()=>onChange(sel.value);
+    box.appendChild(l); box.appendChild(sel);
+    return box;
+  };
+
+  const row=document.createElement("div"); row.className="row";
+  row.appendChild(mkSelect("Accent (clair)", state.appearance.accentLight, Object.keys(ACCENTS).map(k=>({v:k,t:k.toUpperCase()})), (v)=>{
+    state.appearance.accentLight=v; saveState(); renderAll(); renderDrawer();
+  }));
+  row.appendChild(mkSelect("Accent (sombre)", state.appearance.accentDark, Object.keys(ACCENTS).map(k=>({v:k,t:k.toUpperCase()})), (v)=>{
+    state.appearance.accentDark=v; saveState(); renderAll(); renderDrawer();
+  }));
+  s.appendChild(row);
+
+  const row2=document.createElement("div"); row2.className="row"; row2.style.marginTop="10px";
+  row2.appendChild(mkSelect("Barre (clair)", state.appearance.barColorLight, Object.keys(ACCENTS).map(k=>({v:k,t:k.toUpperCase()})), (v)=>{
+    state.appearance.barColorLight=v; saveState(); renderAll(); renderDrawer();
+  }));
+  row2.appendChild(mkSelect("Barre (sombre)", state.appearance.barColorDark, Object.keys(ACCENTS).map(k=>({v:k,t:k.toUpperCase()})), (v)=>{
+    state.appearance.barColorDark=v; saveState(); renderAll(); renderDrawer();
+  }));
+  row2.appendChild(mkSelect("Police", state.appearance.fontFamily, Object.keys(FONT_FAMILIES).map(k=>({v:k,t:k.toUpperCase()})), (v)=>{
+    state.appearance.fontFamily=v; saveState(); renderAll(); renderDrawer();
+  }));
+  s.appendChild(row2);
+
+  const row3=document.createElement("div"); toggleRow=row3; row3.className="row"; row3.style.marginTop="10px";
+  row3.appendChild(mkSelect("Bords", state.appearance.borders, [{v:"on",t:"ON"},{v:"off",t:"OFF"}], (v)=>{
+    state.appearance.borders=v; saveState(); renderAll(); renderDrawer();
+  }));
+  row3.appendChild(mkSelect("Boutons", state.appearance.buttons, [{v:"ghost",t:"GHOST"},{v:"filled",t:"FILLED"}], (v)=>{
+    state.appearance.buttons=v; saveState(); renderAll(); renderDrawer();
+  }));
+  s.appendChild(row3);
+
+  const s2=mkSection("Debug / Export");
+  const r=document.createElement("div"); r.className="row";
+  const btnExport=mkBtn("EXPORT","btn primary");
+  btnExport.onclick=()=>{ openModal("exportModal"); renderExport("json"); };
+  const btnReset=mkBtn("RESET APP","btn");
+  btnReset.onclick=()=>{
+    if(!confirm("Reset complet (state) ?")) return;
+    localStorage.removeItem(LS_KEY);
+    state = seedState(clone(defaultState));
+    saveState();
+    renderAll(); renderDrawer(); renderRight();
+  };
+  r.appendChild(btnExport); r.appendChild(btnReset);
+  s2.appendChild(r);
+
+  wrap.appendChild(s);
+  wrap.appendChild(document.createElement("div")).style.height="10px";
+  wrap.appendChild(s2);
+  return wrap;
+}
+
+function viewHistory(){
+  const wrap=document.createElement("div");
+  const s=mkSection("Historique (7 jours)");
+  snapshotDay();
+
+  const days=(state.history||[]).slice(0,7);
+  if(!days.length){
+    s.innerHTML += `<div class="small">Aucun historique.</div>`;
+  }else{
+    const box=document.createElement("div");
+    box.innerHTML = days.map(d=>{
+      const pct = d.baselineEtorions ? Math.round((d.doneEtorions/d.baselineEtorions)*100) : 0;
+      return `
+        <div style="padding:10px 6px; border-bottom:1px solid var(--line)">
+          <div style="display:flex; justify-content:space-between; gap:10px; align-items:center">
+            <div style="font-family:var(--mono); letter-spacing:.10em; text-transform:uppercase; font-size:11px; color:var(--muted)">${escapeHTML(d.day)}</div>
+            <div style="font-family:var(--mono); font-size:11px; color:var(--muted)">${d.doneTasks} done · ${d.remainingTasks} left · ${pct}% eto</div>
+          </div>
+        </div>`;
+    }).join("");
+    s.appendChild(box);
+  }
+  wrap.appendChild(s);
+  return wrap;
+}
+
+/* Right panel tabs */
+const RIGHT_TABS = [
+  { key:"sets", label:"SETS" },
+  { key:"habits", label:"HABITUDES" },
+  { key:"emotions", label:"ÉMOTIONS" }
+];
+function buildRightTabs(){
+  const el=$("rightTabs"); el.innerHTML="";
+  RIGHT_TABS.forEach(t=>{
+    const b=document.createElement("div");
+    b.className="tab"+(state.rightTab===t.key?" active":"");
+    b.textContent=t.label;
+    b.onclick=()=>{ state.rightTab=t.key; saveState(); renderRight(); };
+    el.appendChild(b);
+  });
+}
+function renderRight(){
+  buildRightTabs();
+  const body=$("rightBody");
+  body.innerHTML="";
+  if(state.rightTab==="sets") body.appendChild(viewRightSets());
+  if(state.rightTab==="habits") body.appendChild(viewRightHabits());
+  if(state.rightTab==="emotions") body.appendChild(viewRightEmotions());
+}
+
+/* Right views */
+function viewRightSets(){
+  const wrap=document.createElement("div");
+  ensureSelectedSet();
+
+  const sTop=mkSection("Sets (checklist)");
+  const row=document.createElement("div"); row.className="row";
+
+  const sel=document.createElement("select");
+  state.sets.list.forEach(s=>{
+    const op=document.createElement("option"); op.value=s.id; op.textContent=s.title;
+    if(s.id===state.sets.selectedId) op.selected=true;
+    sel.appendChild(op);
+  });
+  sel.onchange=()=>{ state.sets.selectedId=sel.value; saveState(); renderRight(); };
+
+  const btnNew=mkBtn("NOUVEAU","btn primary");
+  btnNew.onclick=()=>{ pushUndo("addSet"); addSet(); saveState(); renderRight(); };
+
+  const btnEdit=mkBtn("ÉDITER","btn");
+  btnEdit.onclick=()=> openSetEditor(state.sets.selectedId);
+
+  row.appendChild(sel);
+  row.appendChild(btnNew);
+  row.appendChild(btnEdit);
+  sTop.appendChild(row);
+
+  const set=selectedSet();
+  if(!set){ wrap.appendChild(sTop); return wrap; }
+  initSetChecksForToday(set);
+  const sum=summarizeSetToday(set.id);
+
+  const meta=document.createElement("div");
+  meta.className="small";
+  meta.style.marginTop="8px";
+  meta.textContent = `${sum.done}/${sum.total} cochés aujourd’hui · ${set.unitCount} ${set.unitName} · ${set.items.length} items`;
+  sTop.appendChild(meta);
+
+  const grid=mkSection("Checklist");
+  const dk=dayKey();
+  const checks=set.checks[dk]||{};
+  for(let u=0; u<set.unitCount; u++){
+    const unit=mkSection(`${set.unitName} ${u+1}`);
+    const itemsWrap=document.createElement("div");
+    itemsWrap.style.display="grid";
+    itemsWrap.style.gridTemplateColumns="repeat(2, minmax(0,1fr))";
+    itemsWrap.style.gap="8px";
+
+    set.items.forEach((it,i)=>{
+      const k=setCheckKey(u,i);
+      const on=!!checks[k];
+      const cell=document.createElement("div");
+      cell.style.border="1px solid var(--line)";
+      cell.style.borderRadius="var(--radius2)";
+      cell.style.padding="10px";
+      cell.style.cursor="pointer";
+      cell.style.userSelect="none";
+      cell.style.background = on ? "linear-gradient(180deg,var(--glass2),transparent)" : "transparent";
+
+      const t=document.createElement("div");
+      t.style.fontSize="13px";
+      t.textContent = it;
+
+      const sub=document.createElement("div");
+      sub.style.fontFamily="var(--mono)";
+      sub.style.fontSize="11px";
+      sub.style.color="var(--muted)";
+      sub.style.marginTop="6px";
+      sub.textContent = on ? "ON" : "OFF";
+
+      cell.onclick=()=>{
+        pushUndo("toggleSet");
+        toggleSetCheck(set.id,u,i);
+        snapshotDay();
+        saveState();
+        renderRight();
+      };
+
+      cell.appendChild(t);
+      cell.appendChild(sub);
+      itemsWrap.appendChild(cell);
+    });
+
+    unit.appendChild(itemsWrap);
+    grid.appendChild(unit);
+  }
+
+  wrap.appendChild(sTop);
+  wrap.appendChild(document.createElement("div")).style.height="10px";
+  wrap.appendChild(grid);
+  return wrap;
+}
+
+function viewRightHabits(){
+  const wrap=document.createElement("div");
+  const s=mkSection("Habitudes");
+  const addRow=document.createElement("div"); addRow.className="row";
+  const name=document.createElement("input"); name.placeholder="Nom (ex: eau, marche, lecture)";
+  const slots=document.createElement("input"); slots.type="number"; slots.min="3"; slots.max="12"; slots.step="1"; slots.value="8";
+  const btn=mkBtn("AJOUTER","btn primary");
+  btn.onclick=()=>{
+    pushUndo("addHabit");
+    addHabit(name.value, slots.value);
+    name.value="";
+    snapshotDay(); saveState(); renderRight();
+  };
+  addRow.appendChild(name); addRow.appendChild(slots); addRow.appendChild(btn);
+  s.appendChild(addRow);
+
+  const list=document.createElement("div"); list.style.marginTop="10px";
+  if((state.habits||[]).length===0){
+    list.innerHTML=`<div class="small">Aucune habitude.</div>`;
+  }else{
+    list.innerHTML = state.habits.slice(0,40).map(h=>{
+      const p=habitProgress(h);
+      const chips=h.checks.map((c,idx)=>`<div class="chip ${c?"on":""}" data-h="${h.id}" data-i="${idx}"></div>`).join("");
+      return `
+        <div style="border:1px solid var(--line); border-radius:var(--radius); padding:10px; margin-bottom:10px; background:rgba(0,0,0,.02)">
+          <div style="display:flex; justify-content:space-between; gap:10px; align-items:center">
+            <div style="font-weight:800">${escapeHTML(h.name)}</div>
+            <div class="small">${p.done}/${p.tot} · ${p.pct}%</div>
+          </div>
+          <div class="chips" style="justify-content:flex-start; margin-top:8px">${chips}</div>
+          <div class="row" style="margin-top:10px">
+            <button class="btn" data-act="reset" data-h="${h.id}">RESET</button>
+            <button class="btn" data-act="del" data-h="${h.id}">SUPPRIMER</button>
+          </div>
+        </div>`;
+    }).join("");
+  }
+  s.appendChild(list);
+  wrap.appendChild(s);
+
+  s.querySelectorAll(".chip").forEach(ch=>{
+    ch.onclick=()=>{
+      pushUndo("habitToggle");
+      const hId=ch.getAttribute("data-h");
+      const idx=parseInt(ch.getAttribute("data-i"),10);
+      toggleHabitCheck(hId, idx);
+      snapshotDay(); saveState(); renderRight();
+    };
+  });
+  s.querySelectorAll("button[data-act]").forEach(b=>{
+    b.onclick=()=>{
+      const act=b.getAttribute("data-act");
+      const hId=b.getAttribute("data-h");
+      const h=state.habits.find(x=>x.id===hId); if(!h) return;
+      pushUndo("habitAction");
+      if(act==="reset") h.checks=h.checks.map(()=>false);
+      if(act==="del") state.habits=state.habits.filter(x=>x.id!==hId);
+      snapshotDay(); saveState(); renderRight();
+    };
+  });
+
+  return wrap;
+}
+
+function viewRightEmotions(){
+  const wrap=document.createElement("div");
+  const s=mkSection("Émotions (journal rapide)");
+  const row=document.createElement("div"); row.className="row";
+
+  const emo=document.createElement("select");
+  EMOTIONS.forEach(e=>{ const op=document.createElement("option"); op.value=e; op.textContent=e; emo.appendChild(op); });
+  const intensity=document.createElement("input");
+  intensity.type="number"; intensity.min="0"; intensity.max="10"; intensity.step="1"; intensity.value="5";
+  const btn=mkBtn("AJOUTER","btn primary");
+  btn.onclick=()=>{
+    pushUndo("emoAdd");
+    addEmotionEntry({ id:uid(), day:dayKey(), at:nowISO(), emotion:emo.value, intensity:clamp(parseInt(intensity.value,10)||0,0,10) });
+    snapshotDay(); saveState(); renderRight();
+  };
+
+  row.appendChild(emo);
+  row.appendChild(intensity);
+  row.appendChild(btn);
+  s.appendChild(row);
+
+  const today=emotionsToday();
+  const sum=mkSection("Aujourd’hui");
+  const info=document.createElement("div"); info.className="small";
+  info.textContent = today.length ? `${today.length} entrées · top: ${topEmotion(today)} · avg: ${avgIntensity(today)}/10` : "Aucune entrée.";
+  sum.appendChild(info);
+
+  if(today.length){
+    const list=document.createElement("div"); list.style.marginTop="10px";
+    list.innerHTML = today.slice(0,25).map(e=>{
+      const dt=new Date(e.at);
+      const stamp=dt.toLocaleTimeString("fr-BE",{hour:"2-digit",minute:"2-digit"});
+      return `
+        <div style="padding:10px 6px; border-bottom:1px solid var(--line)">
+          <div style="display:flex; justify-content:space-between; gap:10px; align-items:center">
+            <div style="font-weight:800">${escapeHTML(e.emotion)} · ${e.intensity}/10</div>
+            <div class="small">${stamp}</div>
+          </div>
+        </div>`;
+    }).join("");
+    sum.appendChild(list);
+  }
+
+  const tools=mkSection("Outils");
+  const r2=document.createElement("div"); r2.className="row";
+  const b1=mkBtn("NUDGE","btn primary"); b1.onclick=showNudge;
+  const b2=mkBtn("CONSEIL","btn"); b2.onclick=showTip;
+  r2.appendChild(b1); r2.appendChild(b2);
+  tools.appendChild(r2);
+
+  wrap.appendChild(s);
+  wrap.appendChild(document.createElement("div")).style.height="10px";
+  wrap.appendChild(sum);
+  wrap.appendChild(document.createElement("div")).style.height="10px";
+  wrap.appendChild(tools);
+  return wrap;
+}
+
+/* Editors */
+function openSetEditor(setId){
+  const set=getSetById(setId); if(!set) return;
+  const root=$("setEditBody");
+  clearEl(root);
+
+  const s=mkSection("Éditer set");
+  const title=document.createElement("input"); title.value=set.title||"";
+  const unitName=document.createElement("input"); unitName.value=set.unitName||"Item";
+  const unitCount=document.createElement("input"); unitCount.type="number"; unitCount.min="1"; unitCount.max="50"; unitCount.step="1"; unitCount.value=String(set.unitCount||3);
+  const items=document.createElement("textarea"); items.style.minHeight="220px"; items.value=(set.items||[]).join("\n");
+
+  const lbl=(t)=>{ const d=document.createElement("div"); d.className="small"; d.style.marginTop="8px"; d.textContent=t; return d; };
+
+  s.appendChild(lbl("Titre")); s.appendChild(title);
+  s.appendChild(lbl("Unité + nombre"));
+  const row=document.createElement("div"); row.className="row";
+  row.appendChild(unitName); row.appendChild(unitCount);
+  s.appendChild(row);
+
+  s.appendChild(lbl("Items (1 par ligne)")); s.appendChild(items);
+
+  const act=document.createElement("div"); act.className="row"; act.style.marginTop="10px";
+  const save=mkBtn("SAUVER","btn primary");
+  save.onclick=()=>{
+    pushUndo("setEdit");
+    set.title=(title.value||"").trim() || set.title;
+    set.unitName=(unitName.value||"").trim() || "Item";
+    set.unitCount=clamp(parseInt(unitCount.value,10)||3, 1, 50);
+    set.items=(items.value||"").split(/\r?\n/).map(x=>x.trim()).filter(Boolean).slice(0,80);
+    saveState();
+    renderRight();
+    closeAllModals();
+  };
+  const del=mkBtn("SUPPRIMER","btn");
+  del.onclick=()=>{
+    if(!confirm("Supprimer ce set ?")) return;
+    pushUndo("setDelete");
+    deleteSet(set.id);
+    saveState();
+    renderRight();
+    closeAllModals();
+  };
+  act.appendChild(save); act.appendChild(del);
+  s.appendChild(act);
+
+  root.appendChild(s);
+  openModal("setEditModal");
+}
+
+function openTaskEditor(taskId){
+  const t=getTaskById(taskId); if(!t) return;
+  const root=$("setEditBody");
+  clearEl(root);
+
+  const s=mkSection("Éditer tâche");
+  const title=document.createElement("input"); title.value=t.title||"";
+  const cat=document.createElement("input"); cat.value=t.cat||""; cat.placeholder="Catégorie (optionnel)";
+  const eto=document.createElement("input"); eto.type="number"; eto.min="1"; eto.max="99"; eto.step="1"; eto.value=String(t.etorionsTotal||1);
+  const pin=document.createElement("select");
+  [["0","Non épinglée"],["1","Épinglée"]].forEach(([v,txt])=>{ const o=document.createElement("option"); o.value=v; o.textContent=txt; pin.appendChild(o); });
+  pin.value=t.pinned?"1":"0";
+
+  const lbl=(t)=>{ const d=document.createElement("div"); d.className="small"; d.style.marginTop="8px"; d.textContent=t; return d; };
+
+  s.appendChild(lbl("Titre")); s.appendChild(title);
+  s.appendChild(lbl("Catégorie")); s.appendChild(cat);
+  s.appendChild(lbl("Étorions total + épingle"));
+  const row=document.createElement("div"); row.className="row";
+  row.appendChild(eto); row.appendChild(pin);
+  s.appendChild(row);
+
+  const act=document.createElement("div"); act.className="row"; act.style.marginTop="10px";
+  const save=mkBtn("SAUVER","btn primary");
+  save.onclick=()=>{
+    pushUndo("taskEdit");
+    t.title=(title.value||"").trim() || t.title;
+    t.cat=(cat.value||"").trim().toUpperCase();
+    const oldTotal=t.etorionsTotal||1;
+    const oldLeft=(typeof t.etorionsLeft==="number")?t.etorionsLeft:oldTotal;
+    const newTotal=clamp(parseInt(eto.value,10)||1, 1, 99);
+    t.etorionsTotal=newTotal;
+    t.etorionsLeft=clamp(oldLeft + (newTotal-oldTotal), 0, newTotal);
+    t.pinned=(pin.value==="1");
+    snapshotDay(); saveState(); renderAll(); renderDrawer(); closeAllModals();
+  };
+  const del=mkBtn("SUPPRIMER","btn");
+  del.onclick=()=>{
+    if(!confirm("Supprimer cette tâche ?")) return;
+    pushUndo("taskDelete");
+    state.tasks=state.tasks.filter(x=>x.id!==t.id);
+    ensureCurrentTask();
+    snapshotDay(); saveState(); renderAll(); renderDrawer(); closeAllModals();
+  };
+  act.appendChild(save); act.appendChild(del);
+  s.appendChild(act);
+
+  root.appendChild(s);
+  openModal("setEditModal");
+}
+
+/* Export */
+function tasksAsText(){
+  const act=sortTasks(activeTasks());
+  const byCat={};
+  act.forEach(t=>{
+    const c=(t.cat||"INBOX").trim() || "INBOX";
+    (byCat[c] ||= []).push(t);
+  });
+  const cats=Object.keys(byCat).sort((a,b)=>a.localeCompare(b));
+  const lines=[];
+  cats.forEach(c=>{
+    lines.push(c.toUpperCase());
+    byCat[c].forEach(t=>{
+      const et=t.etorionsTotal||1;
+      const left=t.etorionsLeft??et;
+      lines.push(`- ${t.title} — ${left}/${et}`);
+    });
+    lines.push("");
+  });
+  return lines.join("\n").trim();
+}
+function tasksAsCSV(){
+  const rows=[["title","cat","etorions_total","etorions_left","pinned","done","createdAt","doneAt"]];
+  state.tasks.forEach(t=>{
+    rows.push([
+      t.title||"",
+      t.cat||"",
+      String(t.etorionsTotal||1),
+      String(t.etorionsLeft ?? (t.etorionsTotal||1)),
+      t.pinned? "1":"0",
+      t.done? "1":"0",
+      t.createdAt||"",
+      t.doneAt||""
+    ]);
+  });
+  return rows.map(r=>r.map(x=>`"${String(x).replace(/"/g,'""')}"`).join(",")).join("\n");
+}
+function renderExport(mode){
+  let out="";
+  if(mode==="text") out = tasksAsText();
+  if(mode==="json") out = JSON.stringify({ meta:{ exportedAt: nowISO(), key: LS_KEY }, state }, null, 2);
+  if(mode==="csv") out = tasksAsCSV();
+  $("expOut").value = out;
+}
+
+/* -------------------------
+   Controls
+------------------------- */
+function toggleTheme(){
+  state.theme = (state.theme==="light") ? "dark" : "light";
+  saveState(); renderAll();
+}
+function toggleFocus(){
+  state.focus = !state.focus;
+  saveState(); renderAll();
+}
+
+/* -------------------------
+   Wiring
+------------------------- */
+$("btnMenu").onclick = (e)=>{ e.stopPropagation(); openDrawer(); };
+$("drawerClose").onclick = (e)=>{ e.stopPropagation(); closeDrawer(); };
+$("drawerBack").onclick = closeDrawer;
+
+$("btnRight").onclick = (e)=>{ e.stopPropagation(); openRight(); };
+$("rightClose").onclick = (e)=>{ e.stopPropagation(); closeRight(); };
+$("rightBack").onclick = closeRight;
+
+$("btnTheme").onclick = toggleTheme;
+
+$("btnCounters").onclick = ()=> setCountersVisible(!state.showCounters, true);
+
+$("btnListToggle").onclick = ()=>{
+  state.showBelowList = !state.showBelowList;
+  saveState();
+  renderAll();
+};
+$("btnHideBelow").onclick = ()=>{
+  state.showBelowList = false;
+  saveState();
+  renderAll();
+};
+
+$("btnFocus").onclick = toggleFocus;
+
+$("btnRoulette").onclick = ()=>{
+  const btn = $("btnRoulette");
+  btn.classList.remove("rouletteSpin");
+  void btn.offsetWidth;
+  btn.classList.add("rouletteSpin");
+
+  const pick = roulettePick();
+  if(!pick) return;
+  setTimeout(()=>{
+    pushUndo("roulette");
+    setCurrentTask(pick.id);
+    saveState();
+    renderAll();
+  }, 520);
+};
+
+$("btnEtorion").onclick = degommeEtorion;
+
+$("btnUndo").onclick = (e)=>{ e.stopPropagation(); undo(); };
+
+$("btnNotes").onclick = (e)=>{
+  e.stopPropagation();
+  renderNotes();
+  openModal("notesModal");
+};
+
+$("btnDoneTask").onclick = ()=>{
+  const t=getTaskById(state.currentTaskId);
+  if(!t) return;
+  completeTask(t.id);
+};
+
+$("btnEditTask").onclick = ()=>{
+  const t=getTaskById(state.currentTaskId);
+  if(!t) return;
+  openTaskEditor(t.id);
+};
+
+$("btnPause").onclick = togglePause;
+
+$("noteAdd").onclick = (e)=>{
+  e.stopPropagation();
+  pushUndo("noteAdd");
+  addNote($("noteInput").value);
+  $("noteInput").value="";
+  snapshotDay();
+  saveState();
+  renderNotes();
+};
+$("noteClear").onclick = (e)=>{
+  e.stopPropagation();
+  if(!confirm("Vider toutes les notes ?")) return;
+  pushUndo("noteClear");
+  state.notes=[];
+  snapshotDay();
+  saveState();
+  renderNotes();
+};
+
+$("expText").onclick = ()=>renderExport("text");
+$("expJSON").onclick = ()=>renderExport("json");
+$("expCSV").onclick = ()=>renderExport("csv");
+$("expCopy").onclick = async ()=>{
+  try{
+    await navigator.clipboard.writeText($("expOut").value||"");
+    $("expCopy").textContent="COPIÉ";
+    setTimeout(()=>$("expCopy").textContent="COPIER", 1200);
+  }catch(e){
+    $("expCopy").textContent="ECHEC";
+    setTimeout(()=>$("expCopy").textContent="COPIER", 1200);
+  }
+};
+
+document.addEventListener("keydown",(e)=>{
+  if(e.key==="Escape"){
+    closeAllModals(); closeDrawer(); closeRight();
+  }
+  const tag=(document.activeElement?.tagName||"").toLowerCase();
+  if(e.code==="Space" && !["input","textarea","select"].includes(tag)){
+    e.preventDefault();
+    degommeEtorion();
+  }
+  if((e.ctrlKey || e.metaKey) && e.key.toLowerCase()==="z"){
+    e.preventDefault();
+    undo();
+  }
+});
+
+/* -------------------------
+   Boot
+------------------------- */
+(function boot(){
+  applyAppearance();
+  setRandomTagline(true);
+
+  if(state.timer.running && !state.timer.startedAt) state.timer.startedAt = Date.now();
+
+  ensureSelectedSet();
+  ensureCurrentTask();
+  recomputeBaselineIfNeeded();
+
+  snapshotDay();
+  saveState();
+
+  renderAll();
+  startTimerLoop();
+})();
+</script>
+</body>
+</html>
